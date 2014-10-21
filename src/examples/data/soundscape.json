@@ -1,0 +1,201 @@
+{
+    "user": {
+        "username": "ichabodcole",
+        "lastPlayed": 1,
+        "id": 1,
+        "createdAt": "2014-09-04T05:18:15.171Z",
+        "updatedAt": "2014-09-14T21:27:24.612Z"
+    },
+    "title": "My First Soundscape",
+    "description": "This is a description of my first soundscale",
+    "votes": 0,
+    "rating": 0,
+    "playTime": 400,
+    "masterVolume": 0.5,
+    "soundModules": [
+        {
+            "id": "24892be7-d2c8-4234-81ce-5bf662d3e090",
+            "type": "noise-module",
+            "title": "My Noise Module",
+            "noiseType": "pink",
+            "volume": {
+                "ref": "volume",
+                "controlType": "follow_control",
+                "value": 0.2,
+                "sliderValue": 0.2,
+                "followModuleId": "15bbd46f-25f6-4f39-b81d-c7d5fb66d162",
+                "graphPoints": [
+                    {
+                        "v": 0.55,
+                        "t": 0.2,
+                        "type": 0
+                    },
+                    {
+                        "v": 0.45,
+                        "t": 0.3,
+                        "type": 0
+                    },
+                    {
+                        "v": 0.38,
+                        "t": 0.45,
+                        "type": 0
+                    }
+                ]
+            },
+            "muted": false,
+            "soloed": false,
+            "enabled": true
+        },
+        {
+            "id": "15bbd46f-25f6-4f39-b81d-c7d5fb66d162",
+            "type": "binaural-beat-module",
+            "title": "My Binaural Module",
+            "waveType": "sine",
+            "volume": {
+                "ref": "volume",
+                "controlType": "slider_control",
+                "value": 0.2,
+                "sliderValue": 0.2,
+                "followModuleId": null,
+                "graphPoints": [
+                    {
+                        "v": 0.55,
+                        "t": 0.2,
+                        "type": 0
+                    }
+                ]
+            },
+            "pitch": {
+                "ref": "pitch",
+                "controlType": "slider_control",
+                "value": 440,
+                "sliderValue": 440,
+                "followModuleId": null,
+                "graphPoints": [
+                    {
+                        "v": 440,
+                        "t": 0.2,
+                        "type": 0
+                    },
+                    {
+                        "v": 340,
+                        "t": 0.3,
+                        "type": 0
+                    },
+                    {
+                        "v": 200,
+                        "t": 0.45,
+                        "type": 0
+                    }
+                ]
+            },
+            "beatRate": {
+                "ref": "beatRate",
+                "controlType": "slider_control",
+                "value": 10,
+                "sliderValue": 10,
+                "followModuleId": null,
+                "graphPoints": [
+                    {
+                        "v": 10,
+                        "t": 0.2,
+                        "type": 0
+                    },
+                    {
+                        "v": 7,
+                        "t": 0.3,
+                        "type": 0
+                    },
+                    {
+                        "v": 4,
+                        "t": 0.45,
+                        "type": 0
+                    }
+                ]
+            },
+            "muted": false,
+            "soloed": false,
+            "enabled": true
+        },
+        {
+            "id": "1236561b-37be-4749-b70e-37b3fb7f01d8",
+            "type": "binaural-beat-module",
+            "title": "My Binaural Module",
+            "waveType": "triangle",
+            "volume": {
+                "ref": "volume",
+                "controlType": "slider_control",
+                "value": 0.4,
+                "sliderValue": 0.4,
+                "followModuleId": null,
+                "graphPoints": [
+                    {
+                        "v": 0.25,
+                        "t": 0.15,
+                        "type": 0
+                    },
+                    {
+                        "v": 0.45,
+                        "t": 0.25,
+                        "type": 0
+                    },
+                    {
+                        "v": 0.55,
+                        "t": 0.35,
+                        "type": 0
+                    }
+                ]
+            },
+            "pitch": {
+                "ref": "pitch",
+                "controlType": "slider_control",
+                "value": 240,
+                "sliderValue": 240,
+                "followModuleId": null,
+                "graphPoints": [
+                    {
+                        "v": 440,
+                        "t": 0.25,
+                        "type": 0
+                    },
+                    {
+                        "v": 550,
+                        "t": 0.33,
+                        "type": 0
+                    },
+                    {
+                        "v": 180,
+                        "t": 0.55,
+                        "type": 0
+                    }
+                ]
+            },
+            "beatRate": {
+                "ref": "beatRate",
+                "controlType": "slider_control",
+                "value": 4,
+                "sliderValue": 4,
+                "followModuleId": null,
+                "graphPoints": [
+                    {
+                        "v": 4,
+                        "t": 0.1,
+                        "type": 0
+                    },
+                    {
+                        "v": 7,
+                        "t": 0.4,
+                        "type": 0
+                    }
+                ]
+            },
+            "muted": false,
+            "soloed": false,
+            "enabled": true
+        }
+    ],
+    "moduleIndex": 0,
+    "id": 1,
+    "createdAt": "2014-09-04T05:21:40.066Z",
+    "updatedAt": "2014-10-04T16:21:30.253Z"
+}
