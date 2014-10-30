@@ -1,12 +1,12 @@
-define(['services/utils'], function (utils) {
-    describe('utils', function () {
+var utils = require('../../../../src/soundscape/services/utils');
 
-        beforeEach(function() {
-            utils = utils.default;
-        })
+describe('utils', function () {
 
-        it('should exist', function () {
-            expect(utils.isObject).toBeDefined();
-        });
+    beforeEach(function() {
+        utils = utils.default;
+    })
+
+    it('should exist', function () {
+        expect(utils.isObject).toBeDefined();
     });
-})
+});

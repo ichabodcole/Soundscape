@@ -1,4 +1,5 @@
 var buildConfig = require('./build.config.js');
+// var browserify = require('browserify');
 
 module.exports = function (config) {
     config.set({
@@ -6,18 +7,23 @@ module.exports = function (config) {
 
         browsers: ['Chrome'],
 
-        frameworks: ['jasmine', 'traceur', 'requirejs'],
+        frameworks: ['jasmine', 'browserify'],
 
         preprocessors: {
-           'src/soundscape/services/utils.js' : ['traceur']
+           'src/soundscape/services/utils.js' : ['browserify'],
+           'test/specs/**/*.spec.js': ['browserify']
+        },
+
+        browserify: {
+            transform: ['es6ify'],
+            debug: true
         },
 
         files: [
             // {pattern: 'src/soundscape/**/*.js', included:false},
             { pattern: 'src/soundscape/services/utils.js', included:false },
             { pattern: 'test/specs/**/*.spec.js', included:false },
-            { pattern: 'bower_components/traceur-runtime/traceur-runtime.js', included:false },
-            'test/test-main.js'
+            { pattern: 'bower_components/traceur-runtime/traceur-runtime.js', included:false }
         ],
 
         exclude: [
