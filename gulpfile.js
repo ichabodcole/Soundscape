@@ -88,13 +88,13 @@ function jsHint () {
 }
 
 function js () {
-    var src = './src/brainbeats-engine/index.js';
+    var src = './src/soundscape/index.js';
 
-    return browserify({standalone: 'BrainbeatsEngine', debug: true})
+    return browserify({ standalone: 'Soundscape', debug: true })
         .transform(es6ify)
         .require(require.resolve(src), {entry: true})
         .bundle()
-        .pipe(source('brainbeats-engine.js'))
+        .pipe(source('soundscape.js'))
         .pipe(gulp.dest(config.files.examples.js.dest));
 }
 
@@ -119,7 +119,6 @@ function jsExamples () {
         .pipe(glp_plumber())
         .pipe(glp_jshint())
         .pipe(glp_jshint.reporter(jsstyle))
-        .pipe(glp_traceur())
         .pipe(gulp.dest(config.files.examples.js.dest));
 }
 
@@ -172,7 +171,7 @@ function inject () {
     var jsFiles    = gulp.src([config.files.js.dest + '/*.js', config.files.examples.js.dest + '/*.js']),
         cssFiles   = sass(),
         injectStream = es.merge(jsFiles, cssFiles)
-            .pipe(glp_order(['brainbeats-engine.js', 'bundle.js']));
+            .pipe(glp_order(['soundscape.js', 'bundle.js']));
 
     return gulp.src(config.files.examples.index.src)
         .pipe(glp_wiredep({ ignorePath: path.join('../../', config.bower) }))
@@ -191,8 +190,8 @@ function serve ( ){
     var port = 9000,
     app = connect()
         .use(morgan('dev'))
-        .use('/soundscapes', proxy(url.parse('http://localhost:1337/soundscapes')))
-        .use('/users', proxy(url.parse('http://localhost:1337/users')))
+        // .use('/soundscapes', proxy(url.parse('http://localhost:1337/soundscapes')))
+        // .use('/users', proxy(url.parse('http://localhost:1337/users')))
         .use(static(path.join(__dirname, config.dist)))
         .use(static(path.join(__dirname, config.bower)))
         .use(static(path.join(__dirname, config.files.examples.dest)));

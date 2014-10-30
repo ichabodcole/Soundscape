@@ -1,11 +1,13 @@
-import utils from '../utils';
+import utils from '../services/utils';
+import scpEvents from '../services/soundscape-events';
+import PropertyControl from './property-control/property-control';
 
 var soundModuleDefaults = {
         muted  : false,
         soloed : false,
         enabled: true,
         volume : {
-            ref: 'volume',
+            propertyName: 'volume',
             controlType: 'slider_control',
             followModuleId: null,
             sliderValue: 0.5,
@@ -14,27 +16,43 @@ var soundModuleDefaults = {
     };
 
 class SoundModule {
-    constructor (options) {
-        this.audioCtx   = options.audioCtx;
-        this.masterGain = options.masterGain;
-        this.gainNode   = this.audioCtx.createGain();
-        // Setup default values.
+    constructor (config, data) {
+        this.audioCtx   = config.audioCtx;
+        this.masterGain = config.masterGain;
+        this.gainNode   = config.audioCtx.createGain();
+        this.scpEvents  = scpEvents;
 
+        // Setup default values.
         this.model = Object.assign({}, soundModuleDefaults);
 
         // If the data attribute is set and is an object
         // initialize this model with it.
-        if(options.data && utils.isObject(options.data)) {
-            Object.assign(this.model, options.data);
+        if(data && utils.isObject(data)) {
+            Object.assign(this.model, data);
         }
 
-        this.volume = this.model.volume;
+        // Create a volume property control
+        this.volume = new PropertyControl({ moduleId: this.id }, this.model.volume);
 
-        // this.scope.$on('bb:soundscape:solo', function (e, soloCount) {
-        //     _self.soloCheck(soloCount);
-        // });
+        // Events
+        this.events = {
+            soloEvent: this.scpEvents.on('soundscape', 'solo', this, this.onSoloUpdate),
+            volumeEvent: this.scpEvents.on(this.id, 'volumeUpdate', this, this.onVolumeUpdate)
+        };
     }
 
+    // Event Handlers
+    onVolumeUpdate (e, data) {
+        if (this.enable === true && this.mute === false) {
+            this.gain = this.volume.value;
+        }
+    }
+
+    onSoloUpdate (e, data) {
+        this.soloCheck(data.soloCount);
+    }
+
+    // Public API
     start () {
         this.gainNode.connect(this.masterGain);
     }
@@ -47,6 +65,7 @@ class SoundModule {
 
     remove () {
         this.solo = false;
+        // this.eventBus.off();
     }
 
     soloCheck (soloCount) {
@@ -71,6 +90,18 @@ class SoundModule {
     /*************************************
       *      Getters and Setters
     **************************************/
+
+    getPropertyAttribute(property, attribute) {
+        if(this.hasOwnProperty(property) && this[property].hasOwnProperty(attribute)) {
+            return this[property][attribute];
+        }
+    }
+
+    setPropertyAttribute(property, attribute, value) {
+        if(this.hasOwnProperty(property) && this[property].hasOwnProperty(attribute)) {
+            this[property][attribute] = value;
+        }
+    }
 
     /*** id ***/
     get id () {
@@ -112,7 +143,8 @@ class SoundModule {
     set solo (soloBool) {
         if(soloBool !== void 0 && typeof soloBool === 'boolean') {
             this.model.soloed = soloBool;
-            // this.scope.$emit('bb:soundmodule:solo');
+            console.log('solo');
+            this.scpEvents.broadcast('soundmodule', 'solo', { solo: soloBool });
         }
     }
 
@@ -158,12 +190,7 @@ class SoundModule {
     }
 
     set volume (volumeObj) {
-        if(volumeObj !== void 0 && typeof volumeObj === 'object') {
-            Object.assign(this.model.volume, volumeObj);
-            if (this.enable === true && this.mute === false) {
-                this.gain = this.volume.value;
-            }
-        }
+        this.model.volume = volumeObj;
     }
 }
 

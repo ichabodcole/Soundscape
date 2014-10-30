@@ -19,10 +19,10 @@
             "title": "My Noise Module",
             "noiseType": "pink",
             "volume": {
-                "ref": "volume",
+                "propertyName": "volume",
                 "controlType": "follow_control",
-                "value": 0.2,
-                "sliderValue": 0.2,
+                "value": 0.5,
+                "sliderValue": 0.5,
                 "followModuleId": "15bbd46f-25f6-4f39-b81d-c7d5fb66d162",
                 "graphPoints": [
                     {
@@ -43,7 +43,7 @@
                 ]
             },
             "muted": false,
-            "soloed": false,
+            "soloed": true,
             "enabled": true
         },
         {
@@ -52,7 +52,7 @@
             "title": "My Binaural Module",
             "waveType": "sine",
             "volume": {
-                "ref": "volume",
+                "propertyName": "volume",
                 "controlType": "slider_control",
                 "value": 0.2,
                 "sliderValue": 0.2,
@@ -66,7 +66,7 @@
                 ]
             },
             "pitch": {
-                "ref": "pitch",
+                "propertyName": "pitch",
                 "controlType": "slider_control",
                 "value": 440,
                 "sliderValue": 440,
@@ -90,7 +90,7 @@
                 ]
             },
             "beatRate": {
-                "ref": "beatRate",
+                "propertyName": "beatRate",
                 "controlType": "slider_control",
                 "value": 10,
                 "sliderValue": 10,
@@ -123,7 +123,7 @@
             "title": "My Binaural Module",
             "waveType": "triangle",
             "volume": {
-                "ref": "volume",
+                "propertyName": "volume",
                 "controlType": "slider_control",
                 "value": 0.4,
                 "sliderValue": 0.4,
@@ -147,7 +147,7 @@
                 ]
             },
             "pitch": {
-                "ref": "pitch",
+                "propertyName": "pitch",
                 "controlType": "slider_control",
                 "value": 240,
                 "sliderValue": 240,
@@ -171,7 +171,7 @@
                 ]
             },
             "beatRate": {
-                "ref": "beatRate",
+                "propertyName": "beatRate",
                 "controlType": "slider_control",
                 "value": 4,
                 "sliderValue": 4,

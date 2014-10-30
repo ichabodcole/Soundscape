@@ -9,7 +9,7 @@ var explsSrc = config.app + '/examples',
 
 config.files = {
     js: {
-        src: config.app + '/brainbeats-engine/**/*.js',
+        src: config.app + '/soundscape/**/*.js',
         dest: config.dist
     },
     examples: {

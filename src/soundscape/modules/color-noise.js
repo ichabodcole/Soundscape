@@ -1,3 +1,4 @@
+import utils from '../services/utils';
 import SoundModule from './sound-module';
 
 var colorNoiseDefaults = {
@@ -7,10 +8,10 @@ var colorNoiseDefaults = {
 };
 
 class ColorNoiseModule extends SoundModule {
-    constructor (options) {
-        super(options);
+    constructor (config, data) {
+        super(config, data);
 
-        this.model = Object.assign({}, colorNoiseDefaults, this.model);
+        this.model = utils.deepExtend({}, colorNoiseDefaults, this.model);
 
         // Setup the sound generator
         this.generator = new NoiseGen(this.audioCtx);

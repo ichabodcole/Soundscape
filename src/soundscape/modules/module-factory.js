@@ -7,9 +7,9 @@ var modules = {
 };
 
 var SoundModuleFactory = {
-    create: function (type, options) {
+    create: function (type, config, data) {
         if (modules.hasOwnProperty(type)) {
-            return new modules[type](options);
+            return new modules[type](config, data);
         } else {
             return false;
         }

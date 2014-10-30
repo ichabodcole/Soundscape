@@ -1,19 +1,21 @@
+import utils from '../services/utils';
 import SoundModule from './sound-module';
+import PropertyControl from './property-control/property-control';
 
 var binauralBeatDefaults = {
-    title: "Binaural Beat Module",
+    title: 'Binaural Beat Module',
     type: 'binaural-beat-module',
     // Binaural beat module specific settings
     waveType: 'sine',
     pitch: {
-        ref: "pitch",
+        propertyName: 'pitch',
         controlType: 'slider_control',
         value: 440,
         sliderValue: 440,
         followModuleId: null
     },
     beatRate: {
-        ref: "beatRate",
+        propertyName: 'beatRate',
         controlType: 'slider_control',
         value: 8,
         sliderValue: 8,
@@ -22,10 +24,11 @@ var binauralBeatDefaults = {
 };
 
 class BinauralBeatModule extends SoundModule {
-    constructor (options) {
+    constructor (config, data) {
+        var _self = this;
         // Call the sound SoundModule constructor.
-        super(options);
-        this.model = Object.assign({}, binauralBeatDefaults, this.model);
+        super(config, data);
+        this.model = utils.deepExtend({}, binauralBeatDefaults, this.model);
 
         // Set up the sound generator
         this.generator = new BinauralBeat(this.audioCtx);
@@ -33,8 +36,19 @@ class BinauralBeatModule extends SoundModule {
 
         // Set the sound generator specific properties
         this.waveType = this.model.waveType;
-        this.pitch    = this.model.pitch;
-        this.beatRate = this.model.beatRate;
+
+        var propertyConfig = {
+            moduleId: this.id,
+        };
+
+        // Create property controls
+        this.pitch    = new PropertyControl(propertyConfig, this.model.pitch);
+        this.beatRate = new PropertyControl(propertyConfig, this.model.beatRate);
+
+        this.events = Object.assign(this.events, {
+            pitchEvent: this.scpEvents.on('soundmodule', 'pitchChange', _self, _self.onPitchChange),
+            beatRateEvent: this.scpEvents.on('soundmodule', 'beatRateChange', _self, _self.onBeatRateChange)
+        });
 
         // Start the generator
         this.generator.start();
@@ -44,6 +58,14 @@ class BinauralBeatModule extends SoundModule {
         super.remove();
         this.generator.disconnect();
         this.gainNode.disconnect();
+    }
+
+    onPitchChange (e, data) {
+        console.log(e, 'beatRateChange');
+    }
+
+    onBeatRateChange (e, data) {
+        console.log(e, 'beatRateChange');
     }
 
     /*************************************
