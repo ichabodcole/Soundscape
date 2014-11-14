@@ -17,7 +17,7 @@ function test (done) {
     }, done);
 }
 
-gulp.task('tdd', ['reload'], tdd);
+gulp.task('tdd', tdd);
 
 function tdd (done) {
     karma.start({

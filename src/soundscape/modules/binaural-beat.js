@@ -1,6 +1,6 @@
 import utils from '../services/utils';
 import SoundModule from './sound-module';
-import PropertyControl from './property-control/property-control';
+// import MultiControlProperty from '../multi-control-property/multi-control-property';
 
 var binauralBeatDefaults = {
     title: 'Binaural Beat Module',
@@ -42,13 +42,13 @@ class BinauralBeatModule extends SoundModule {
         };
 
         // Create property controls
-        this.pitch    = new PropertyControl(propertyConfig, this.model.pitch);
-        this.beatRate = new PropertyControl(propertyConfig, this.model.beatRate);
+        // this.pitch    = new MultiControlProperty(propertyConfig, this.model.pitch);
+        // this.beatRate = new MultiControlProperty(propertyConfig, this.model.beatRate);
 
-        this.events = Object.assign(this.events, {
-            pitchEvent: this.scpEvents.on('soundmodule', 'pitchChange', _self, _self.onPitchChange),
-            beatRateEvent: this.scpEvents.on('soundmodule', 'beatRateChange', _self, _self.onBeatRateChange)
-        });
+        // this.events = Object.assign(this.events, {
+        //     pitchEvent: this.scpEvents.on('soundmodule', 'pitchChange', _self, _self.onPitchChange),
+        //     beatRateEvent: this.scpEvents.on('soundmodule', 'beatRateChange', _self, _self.onBeatRateChange)
+        // });
 
         // Start the generator
         this.generator.start();

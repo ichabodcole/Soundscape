@@ -1,3 +1,7 @@
+// Module dependencies
+import utils from '../services/utils';
+
+// Sound Module Classes
 import BinauralBeatModule from './binaural-beat';
 import ColorNoiseModule from './color-noise';
 
@@ -7,12 +11,19 @@ var modules = {
 };
 
 var SoundModuleFactory = {
-    create: function (type, config, data) {
+
+    create: function (config, data) {
         if (modules.hasOwnProperty(type)) {
-            return new modules[type](config, data);
-        } else {
-            return false;
+            // Create a new id for the module
+            // if one does not already exist.
+            if ( !moduleData.hasOwnProperty('id')) {
+                moduleData.id = this.utils.uuid();
+            }
+
+            return new modules[config.type](config, data);
         }
+
+        return false;
     }
 };
 

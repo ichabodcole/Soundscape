@@ -35,12 +35,12 @@ function jsHint () {
 function js () {
     var src = '../src/soundscape/index.js';
 
-    return browserify({ standalone: 'Soundscape', debug: true })
+    return browserify({ standalone: 'SoundscapeFactory', debug: true })
         .transform(es6ify)
         .on('error', handleError)
         .require(require.resolve(src), {entry: true})
         .bundle()
-        .pipe(source('soundscape.js'))
+        .pipe(source('soundscape-factory.js'))
         .pipe(gulp.dest(config.files.examples.js.dest));
 }
 
