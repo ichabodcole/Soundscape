@@ -1,26 +1,33 @@
-import utils from './services/utils';
-import scpEvents from './services/soundscape-events';
-import SoundModuleFactory from './modules/module-factory';
-
 var STOPPED = 'stopped',
     PLAYING = 'playing',
     PAUSED  = 'paused';
 
+/**
+* @description
+* Create a new Soundscape instance
+*
+* @param config object - contains dependencies necessary for soundscape to function.
+* @returns Soundscape
+*/
 class Soundscape {
-    constructor (audioCtx, options) {
-        this.audioCtx  = audioCtx;
-        this.gain      = ctx.createGain();
-        this.state     = STOPPED;
-        this.scpEvents = scpEvents;
-        this.model     = {};
+    constructor (config) {
+        // Setup variables using config object.
+        this.audioCtx           = config.audioContext;
+        this.moduleFactory      = config.moduleFactory;
+        this.pubSub             = config.pubSub;
+        this.utils              = config.utils;
+        this.gain               = config.audioContext.createGain();
+
+        this.state              = STOPPED;
+        this.model              = {};
         this.model.soundModules = [];
 
         this.gain.connect(this.audioCtx.destination);
-        this.scpEvents.on('soundmodule', 'solo', this, this.soloUpdate);
+        this.pubSub.on('soundmodule', 'solo', this, this.soloUpdate);
     }
 
     soloUpdate (e) {
-        this.scpEvents.broadcast('soundscape', 'solo', { soloCount: this.soloCount });
+        this.pubSub.broadcast('soundscape', 'solo', { soloCount: this.soloCount });
     }
 
     play () {
@@ -35,8 +42,11 @@ class Soundscape {
 
     pause () {
         this.state = PAUSED;
-        console.log('paused');
-        this.stop();
+        if (this.hasSoundModules()) {
+            this.soundModules.forEach(function (module) {
+                module.stop();
+            });
+        }
         return this;
     }
 
@@ -50,31 +60,22 @@ class Soundscape {
         return this;
     }
 
-    createSoundModule (moduleData) {
-        var type = moduleData.type,
-            config = {
-                audioCtx: this.audioCtx,
-                masterGain: this.gain
-            };
-        // Create a new id for the module
-        // if one does not already exist.
-        if ( !moduleData.hasOwnProperty('id')) {
-            moduleData.id = utils.uuid();
-        }
-
-        return SoundModuleFactory.create(type, config, moduleData);
-    }
-
     addSoundModule (moduleData, updateSolo=true) {
-        var soundModule;
+        var soundModule, mConfig;
 
         if( !moduleData.hasOwnProperty('type')) {
             return false;
         }
 
-        soundModule = this.createSoundModule(moduleData);
+        // Module Config
+        var mConfig = {
+            audioCtx: this.audioCtx,
+            masterGain: this.gain
+        };
 
-        if (utils.isObject(soundModule)) {
+        soundModule = this.moduleFactory.create(mConfig, moduleData);
+
+        if (this.utils.isObject(soundModule)) {
             this.soundModules.push(soundModule);
 
             if (this.state === PLAYING) {
@@ -158,11 +159,23 @@ class Soundscape {
         return this.getSoundModuleByProperty('id', moduleId);
     }
 
-    getSoundModuleByProperty (propertyName, propertyValue) {
+    getSoundModulesByProperty (propertyName, propertyValue) {
         return this.soundModules.filter(propertyMatch)[0];
 
         function propertyMatch(element) {
             return element[propertyName] === propertyValue;
+        }
+    }
+
+    get volume () {
+        return this.gain.gain.value;
+    }
+
+    set volume (volume) {
+        if (typeof volume !== 'number') {
+            this.gain.gain.value = volume;
+        } else {
+            throw 'Soundscape: volume must be a number';
         }
     }
 
