@@ -31,7 +31,7 @@ describe ('BaseControl', function () {
         it ('should throw an error if no propertyName is defined in the model', function () {
             expect(function () {
                 new BaseControl('BaseControl', config, {});
-            }).toThrow(new Error ('BaseControl: model object must have a propertName attribute defined'));
+            }).toThrow(new Error ('BaseControl: model object must have a propertyName attribute defined'));
         });
 
         it ('should throw an error if the config object does not have an events attribute', function () {
@@ -73,11 +73,23 @@ describe ('BaseControl', function () {
                 expect(bc.value).toBe(0.5);
             });
         });
+
+        xdescribe ('rawValue', function () {
+
+        });
+
+        xdescribe ('transforms', function () {
+
+        });
     });
 
     describe ('methods', function () {
 
         describe ('on', function () {
+            beforeEach(function () {
+                events.on.and.returnValue('myTokenId01');
+            });
+
             it ('should call the on method of the events obj', function () {
                 bc.on(BaseControl.VALUE_CHANGE, listener.update, listener);
                 expect(events.on).toHaveBeenCalledWith(BaseControl.VALUE_CHANGE, listener.update, listener);
@@ -88,6 +100,11 @@ describe ('BaseControl', function () {
                     bc.on('invalidEvent', listener.update, listener);
                 }).toThrow(new Error ('BaseControl: attempting to listen to invalid event: invalidEvent'));
             });
+
+            it ('should return a token string', function () {
+                var token = bc.on(BaseControl.VALUE_CHANGE, listener.update, listener);
+                expect(typeof token).toEqual('string');
+            });
         });
 
         describe ('off', function () {
@@ -96,6 +113,14 @@ describe ('BaseControl', function () {
                 bc.off(token, BaseControl.VALUE_CHANGE);
                 expect(events.off).toHaveBeenCalledWith(token, BaseControl.VALUE_CHANGE);
             });
+        });
+
+        xdescribe ('addTransform', function () {
+
+        });
+
+        xdescribe ('removeTransform', function () {
+
         });
     });
 });

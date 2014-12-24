@@ -35,12 +35,12 @@ function jsHint () {
 function js () {
     var src = '../src/soundscape/index.js';
 
-    return browserify({ standalone: 'SoundscapeFactory', debug: true })
+    return browserify({ standalone: 'SoundscapeProvider', debug: true })
         .transform(es6ify)
         .on('error', handleError)
         .require(require.resolve(src), {entry: true})
         .bundle()
-        .pipe(source('soundscape-factory.js'))
+        .pipe(source('soundscape.js'))
         .pipe(gulp.dest(config.files.examples.js.dest));
 }
 
@@ -58,10 +58,20 @@ function jsCompile () {
 gulp.task('jsExamples', jsExamples);
 
 function jsExamples () {
+    var src = '../src/examples/app.js';
 
-    return gulp.src(config.files.examples.js.src)
-        .pipe(glp_plumber())
-        .pipe(glp_jshint())
-        .pipe(glp_jshint.reporter(jsstyle))
+    return browserify({ debug:true })
+        .transform(es6ify)
+        .on('error', handleError)
+        // .add('./bower_components/traceur-runtime/traceur-runtime.js')
+        .require(require.resolve(src), {entry: true})
+        .bundle()
+        .pipe(source('app.js'))
         .pipe(gulp.dest(config.files.examples.js.dest));
+
+    // return gulp.src(config.files.examples.js.src)
+    //     .pipe(glp_plumber())
+    //     .pipe(glp_jshint())
+    //     .pipe(glp_jshint.reporter(jsstyle))
+    //     .pipe(gulp.dest(config.files.examples.js.dest));
 }

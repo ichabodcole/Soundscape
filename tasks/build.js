@@ -11,5 +11,5 @@ var gulp     = require('gulp'),
 gulp.task('build', build);
 
 function build (cb) {
-  sequence(['js', 'jsExamples', 'sass', 'copy'], 'inject', cb);
+  sequence(['jsExamples', 'sass', 'copy'], 'inject', cb);
 }

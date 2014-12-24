@@ -67,5 +67,29 @@ describe('utils', function () {
                 expect(reg.test(uuid)).toBe(true);
             });
         });
+
+        describe ('mils2Secs', function () {
+            it ('should be defined', function() {
+                expect(utils.mils2Secs).toBeDefined();
+            });
+        });
+
+        describe ('mils2Mins', function () {
+            it ('should be defined', function() {
+                expect(utils.mils2Mins).toBeDefined();
+            });
+        });
+
+        describe ('secs2Mils', function() {
+            it ('should be defined', function() {
+                expect(utils.secs2Mils).toBeDefined();
+            });
+        });
+
+        describe ('mins2Mils', function() {
+            it ('should be defined', function() {
+                expect(utils.mins2Mils).toBeDefined();
+            });
+        });
     });
 });

@@ -2,7 +2,7 @@
 import BaseControl from './base-control';
 import Events from '../services/events';
 
-class FollowControl extends BaseControl {
+export class FollowControl extends BaseControl {
     constructor (config, model) {
         super('FollowControl', config, model);
         this.targetToken = null;
@@ -25,17 +25,18 @@ class FollowControl extends BaseControl {
 
     start () {
         if (this.target != null) {
-            this.targetToken = this.target.on(FollowControl.VALUE_CHANGE, (value)=> {
+            this.targetToken = this.target.on(FollowControl.VALUE_CHANGE, (e, value)=> {
                 this.value = value;
             }, this);
+            this.events.broadcast(FollowControl.START);
         }
     }
 
     stop () {
-        console.log('token', targetToken);
         if (this.targetToken != null) {
             this.target.off(this.targetToken, FollowControl.VALUE_CHANGE);
             this.targetToken = null;
+            this.events.broadcast(FollowControl.STOP);
         }
     }
 
@@ -50,8 +51,12 @@ class FollowControl extends BaseControl {
     }
 }
 
+// Event String Constants
+FollowControl.START = 'follow_start';
+FollowControl.STOP  = 'follow_stop';
+
 export var FollowControlProvider = {
-    get: function (model={}) {
+    get: function (model) {
         var config = {
             events: new Events().setChannel('follow_control')
         };

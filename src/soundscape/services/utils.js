@@ -28,6 +28,50 @@ var utils = {
             var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
             return v.toString(16);
         });
+    },
+
+    /**
+    * @description
+    * Converts milliseconds to seconds
+    *
+    * @param mils number
+    * @returns number - amount of seconds
+    */
+    mils2Secs: function(mils) {
+        return mils * 0.001;
+    },
+
+    /**
+    * @description
+    * Converts milliseconds to minutes
+    *
+    * @param mils number
+    * @returns number - amount of minutes
+    */
+    mils2Mins: function(mils) {
+        return mils * 0.001 / 60; // * 0.0667 (limit to 3 decimals?)
+    },
+
+    /**
+    * @description
+    * Converts seconds to milliseconds
+    *
+    * @param secs number
+    * @returns number - amount of milliseconds
+    */
+    secs2Mils: function(secs) {
+        return secs * 1000;
+    },
+
+    /**
+    * @description
+    * Converts minutes to milliseconds
+    *
+    * @param mins number
+    * @returns number - amount of milliseconds
+    */
+    mins2Mils: function(mins) {
+        return mins * 1000 * 60; // * 0.0667 (limit to 3 decimals?)
     }
 };
 

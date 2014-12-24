@@ -1,3 +1,8 @@
+import utils from './services/utils';
+import SoundModuleFactory from './modules/module-factory';
+import AudioContextProvider from './services/audio-context-provider';
+import Events from './services/events';
+
 var STOPPED = 'stopped',
     PLAYING = 'playing',
     PAUSED  = 'paused';
@@ -9,12 +14,12 @@ var STOPPED = 'stopped',
 * @param config object - contains dependencies necessary for soundscape to function.
 * @returns Soundscape
 */
-class Soundscape {
+export class Soundscape {
     constructor (config) {
         // Setup variables using config object.
         this.audioCtx           = config.audioContext;
         this.moduleFactory      = config.moduleFactory;
-        this.pubSub             = config.pubSub;
+        this.events             = config.events;
         this.utils              = config.utils;
         this.gain               = config.audioContext.createGain();
 
@@ -23,11 +28,11 @@ class Soundscape {
         this.model.soundModules = [];
 
         this.gain.connect(this.audioCtx.destination);
-        this.pubSub.on('soundmodule', 'solo', this, this.soloUpdate);
+        this.events.on('soundmodule', 'solo', this, this.soloUpdate);
     }
 
     soloUpdate (e) {
-        this.pubSub.broadcast('soundscape', 'solo', { soloCount: this.soloCount });
+        this.events.broadcast('soundscape', 'solo', { soloCount: this.soloCount });
     }
 
     play () {
@@ -68,7 +73,7 @@ class Soundscape {
         }
 
         // Module Config
-        var mConfig = {
+        mConfig = {
             audioCtx: this.audioCtx,
             masterGain: this.gain
         };
@@ -215,5 +220,29 @@ class Soundscape {
         }
     }
 }
+
+Soundscape.PLAYING = 'playing';
+Soundscape.STOPPED = 'stopped';
+Soundscape.PAUSED  = 'paused';
+
+export var SoundscapeProvider = {
+    get: function () {
+        var config;
+
+        // Create a new audio context if none is supplied.
+        if(audioContext == null) {
+            audioContext = AudioContextProvider.get();
+        }
+
+        config = {
+            utils: utils,
+            events: new Events(),
+            moduleFactory: SoundModuleFactory,
+            audioContext: audioContext
+        };
+
+        return new Soundscape(config);
+    }
+};
 
 export default Soundscape;

@@ -20,8 +20,11 @@ function watcher () {
         dataWatch     = gulp.watch(config.files.examples.src + '/data/*.json', ['copy']),
         examplesWatch = gulp.watch(examplesGlob);
 
+    jsWatch.on('change', function (event) {
+        server.changed(event.path);
+    });
     // reloads when files change in build directory
-    examplesWatch.on('change', function(event) {
+    examplesWatch.on('change', function (event) {
         server.changed(event.path);
     });
 }

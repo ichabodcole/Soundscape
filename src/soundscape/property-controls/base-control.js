@@ -1,5 +1,3 @@
-import Events from '../services/events';
-
 class BaseControl {
     constructor (controlName, config, model={}) {
         this.controlName = controlName;
@@ -22,15 +20,15 @@ class BaseControl {
 
     validateModel (model) {
         if (model.propertyName && typeof model.propertyName === 'string') {
-            return model;
+            return Object.assign({}, model);
         } else {
-            this.handleError('model object must have a propertName attribute defined');
+            this.handleError('model object must have a propertyName attribute defined');
         }
     }
 
     on (eventName, func, context=null) {
         if (this.validEvents.indexOf(eventName) !== -1) {
-            this.events.on(eventName, func, context);
+            return this.events.on(eventName, func, context);
         } else {
             this.handleError(`attempting to listen to invalid event: ${eventName}`);
         }

@@ -1,6 +1,5 @@
 import utils from '../services/utils';
-import scpEvents from '../services/soundscape-events';
-// import MultiControlProperty from '../multi-control-property/multi-control-property';
+import Events from '../services/events';
 
 var soundModuleDefaults = {
         muted  : false,
@@ -32,11 +31,14 @@ class SoundModule {
         }
         // Create a volume property control
         // this.volume = new MultiControlProperty({ moduleId: this.id }, this.model.volume);
-
+        // this.volume.addTransform(pitchTransform)
         // Events
         this.events = {
             soloEvent: this.pubSub.on('soundscape', 'solo', this, this.onSoloUpdate),
             // volumeEvent: this.pubSub.on(this.id, 'volumeUpdate', this, this.onVolumeUpdate)
+            // this.pitch.on(VALUE_UPDATE, (value) => {
+            //   this.generator.setPitch(pitchTransform(value))
+            // }, this);
         };
     }
 

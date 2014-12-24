@@ -12,7 +12,7 @@ var gulp        = require('gulp'),
   *          Serve Task
 **************************************/
 
-gulp.task('serve', ['build', 'inject'], serve);
+gulp.task('serve', ['build', 'inject', 'watcher'], serve);
 
 function serve ( ){
     var port = 9000,

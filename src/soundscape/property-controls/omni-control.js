@@ -1,5 +1,9 @@
 import utils from '../services/utils';
-import scpEvents from '../services/soundscape-events';
+import Events from '../services/events';
+import BaseControl from './base-control';
+import { RangeControlProvider, RangeControl } from './range-control';
+import { FollowControlProvider, FollowControl } from './follow-control';
+import { GraphControlProvider, GraphControl } from './graph-control';
 
 var omniControlDefaults = {
         propertyName: null,
@@ -12,137 +16,49 @@ var omniControlDefaults = {
     };
 
 
-class OmniControl {
-    constructor (config={}, data={}) {
-        this.checkPropertyNameExists(data);
+class OmniControl extends BaseControl {
+    constructor (config={}, model={}) {
+        super('OmniControl', config, model);
+
         this.controlTypes = [
             OmniControl.RANGE_CONTROL,
             OmniControl.FOLLOW_CONTROL,
             OmniControl.GRAPH_CONTROL
         ];
-        this.events = config.events;
-        this.model  = Object.assign({}, omniControlDefaults, data);
-        this.validEvents = [
-            OmniControl.VALUE_UPDATE,
-            OmniControl.CONTROL_TYPE_UPDATE
-        ];
+
+        this.controlInstance;
+        // Setup the controls container obj
+        this.controls = {};
+        this.controls[OmniControl.RANGE_CONTROL]  = RangeControlProvider.get({ propertyName: this.model.propertyName });
+        this.controls[OmniControl.FOLLOW_CONTROL] = FollowControlProvider.get({ propertyName: this.model.propertyName });
+        this.controls[OmniControl.GRAPH_CONTROL]  = GraphControlProvider.get({ propertyName: this.model.propertyName });
+
+        // Default to a range control if no control is specified in the model object
+        this.controlType = this.model.controlType || OmniControl.RANGE_CONTROL;
+        // this.model  = Object.assign({}, omniControlDefaults, model);
+        // Add OmniControl spefic events to the validEvents Array.
+        this.validEvents.push(OmniControl.CONTROL_TYPE_CHANGE);
     }
 
-    on (eventName, context, func) {
-        if (this.validEvents.indexOf(eventName) !== -1) {
-            return this.events.on(eventName, context, func);
-        } else {
-            throw new Error('OmniControl:on - unexpected event name: ' + eventName);
-        }
-    }
-
-    off (token, eventName) {
-        this.events.off(token, eventName);
-    }
-
-    checkPropertyNameExists (data) {
-        if (data.propertyName == null) {
-            throw new Error('OmniControl must have a propertyName assigned in data object');
-        }
-    }
-
-    validFollowProperty (followProperty) {
-        if (!(followProperty instanceof OmniControl)) {
-            throw new Error('followProperty must set to an instance of OmniControl');
+    __isValidControlType (controlType) {
+        if(this.controlTypes.indexOf(controlType) === -1) {
             return false;
-        } else if (this === followProperty) {
-            throw new Error('Cannot set followProperty to own property');
-            return false;
-        } else if (this.propertyName !== followProperty.propertyName) {
-            throw new Error('Cannot set followProperty ' + this.propertyName + ' to ' + followProperty.propertyName);
-            return false;
-        } else {
-            return true;
         }
-    }
-
-    handleControlType (controlType) {
-        if (controlType === OmniControl.RANGE_CONTROL) {
-            this.value = this.rangeValue;
-        } else if (controlType === OmniControl.FOLLOW_CONTROL && this.followProperty != null) {
-            this.value = this.followProperty.value;
-            this.followProperty.on(OmniControl.VALUE_UPDATE, this, function (e, value) {
-                this.value = value;
-            });
-        }
-    }
-
-    remove () {
-        console.log('remove');
-    }
-
-    // Getters & Setters
-    get data () {
-        return this.model;
-    }
-
-    set data (data) {
-        Object.assign(this.model, data);
-    }
-
-    get propertyName () {
-        return this.model.propertyName;
-    }
-
-    get controlType () {
-        return this.model.controlType;
+        return true;
     }
 
     set controlType (controlType) {
-        if (this.controlTypes.indexOf(controlType) !== -1) {
+        if(this.__isValidControlType(controlType)) {
             this.model.controlType = controlType;
-            this.events.broadcast(OmniControl.CONTROL_TYPE_UPDATE, controlType);
-            this.handleControlType(controlType);
+            this.controlInstance = this.controls[controlType];
+            this.events.broadcast(OmniControl.CONTROL_TYPE_CHANGE, controlType);
         } else {
-            // throw new Error ('Cannot set controlType to invalid control type: ' + controlType);
-
-            throw new Error (OmniControl.CT_INVALID({controlType: controlType}));
+            throw new Error(`OmniControl: controlType (${controlType}), is not a valid controlType`);
         }
     }
 
-    get rangeValue () {
-        return this.model.rangeValue;
-    }
-
-    set rangeValue (rangeValue) {
-        this.model.rangeValue = rangeValue;
-        if (this.controlType === OmniControl.RANGE_CONTROL) {
-            this.value = this.rangeValue;
-        }
-    }
-
-    get followProperty () {
-        if (this.model.followProperty instanceof OmniControl) {
-            return this.model.followProperty;
-        }
-    }
-
-    set followProperty (propertyControl) {
-        if (this.validFollowProperty(propertyControl)) {
-            this.model.followProperty = propertyControl;
-        }
-    }
-
-    get graph () {
-        return this.model.graph;
-    }
-
-    set graph (graph) {
-        this.model.graph = graph;
-    }
-
-    get value () {
-        return this.model.value;
-    }
-
-    set value (value) {
-        this.model.value = value;
-        this.events.broadcast(OmniControl.VALUE_UPDATE, this.model.value);
+    get controlType() {
+        return this.model.controlType;
     }
 }
 
@@ -151,11 +67,6 @@ OmniControl.RANGE_CONTROL       = 'range_control';
 OmniControl.FOLLOW_CONTROL      = 'follow_control';
 OmniControl.GRAPH_CONTROL       = 'graph_control';
 // Event name constants
-OmniControl.VALUE_UPDATE        = 'value_update';
-OmniControl.CONTROL_TYPE_UPDATE = 'control_type_update';
-// Error messages
-OmniControl.CT_INVALID = function (data={}) {
-    return `Cannot set controlType to invalid control type: ${data.controlType}`;
-};
+OmniControl.CONTROL_TYPE_CHANGE = 'control_type_change';
 
 export default OmniControl;
