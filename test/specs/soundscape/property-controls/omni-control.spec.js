@@ -4,7 +4,7 @@ import FollowControl from '../../../../src/soundscape/property-controls/follow-c
 import GraphControl from '../../../../src/soundscape/property-controls/graph-control';
 
 describe ('OmniControl', function () {
-    var omniCtrl, config, data, events;
+    var omniCtrl, options, events;
 
     it ('should be defined', function () {
         expect(OmniControl).toBeDefined();
@@ -13,16 +13,17 @@ describe ('OmniControl', function () {
     beforeEach(function () {
         events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
         events.on.and.returnValue('someToken');
-        config = {
-            events: events
-        };
-        data = {
-            propertyName: 'volume',
-            rangeValue: 0.5,
-            value: 0.5
+        options = {
+            events: events,
+            controlName: 'OmniControl',
+            model: {
+                propertyName: 'volume',
+                rangeValue: 0.5,
+                value: 0.5
+            }
         };
 
-        omniCtrl = new OmniControl(config, data);
+        omniCtrl = new OmniControl(options);
     });
 
     describe('properties', function() {
@@ -40,8 +41,8 @@ describe ('OmniControl', function () {
             });
 
             it('should use the provide models controlType property if present', function() {
-                data.controlType = OmniControl.FOLLOW_CONTROL;
-                omniCtrl = new OmniControl(config, data);
+                options.model.controlType = OmniControl.FOLLOW_CONTROL;
+                omniCtrl = new OmniControl(options);
                 expect(omniCtrl.controlType).toBe(OmniControl.FOLLOW_CONTROL);
             });
 
@@ -65,6 +66,14 @@ describe ('OmniControl', function () {
                 it('should broadcast the CONTROL_TYPE_CHANGE event', function() {
                     omniCtrl.controlType = OmniControl.FOLLOW_CONTROL;
                     expect(events.broadcast).toHaveBeenCalledWith(OmniControl.CONTROL_TYPE_CHANGE, OmniControl.FOLLOW_CONTROL);
+                });
+
+                xit('should start listening to value changes from the asigned control instance', function() {
+                    expect();
+                });
+
+                xit('should stop listening value changes from other control instances', function() {
+
                 });
             });
 

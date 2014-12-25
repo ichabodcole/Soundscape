@@ -1,29 +1,15 @@
+import Events from '../services/events';
+
 class BaseControl {
-    constructor (controlName, config, model={}) {
-        this.controlName = controlName;
-        this.events = this.validateEvents(config);
-        this.model  = this.validateModel(model);
-        this.validEvents = [BaseControl.VALUE_CHANGE];
+    constructor (options) {
+        this.controlName = options.controlName || 'Property Control';
+        this.events = options.events || new Events().setChannel('property-control');
+        this.model  = Object.assign({}, options.model || {});
+        this.validEvents = [ BaseControl.VALUE_CHANGE ];
     }
 
     handleError (errorMessage) {
         throw new Error(this.controlName + ': ' + errorMessage);
-    }
-
-    validateEvents (config) {
-        if (config.events instanceof Object) {
-            return config.events;
-        } else {
-            this.handleError('config object must have an events attribute set to an Events instance');
-        }
-    }
-
-    validateModel (model) {
-        if (model.propertyName && typeof model.propertyName === 'string') {
-            return Object.assign({}, model);
-        } else {
-            this.handleError('model object must have a propertyName attribute defined');
-        }
     }
 
     on (eventName, func, context=null) {
@@ -36,6 +22,10 @@ class BaseControl {
 
     off (token, eventName) {
         this.events.off(token, eventName);
+    }
+
+    set propertyName (propertyName) {
+        this.model.propertyName = propertyName;
     }
 
     get propertyName () {

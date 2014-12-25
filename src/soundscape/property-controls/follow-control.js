@@ -1,10 +1,9 @@
 // Import dependencies
 import BaseControl from './base-control';
-import Events from '../services/events';
 
 export class FollowControl extends BaseControl {
-    constructor (config, model) {
-        super('FollowControl', config, model);
+    constructor (options={}) {
+        super(options);
         this.targetToken = null;
     }
 
@@ -14,9 +13,6 @@ export class FollowControl extends BaseControl {
             return false;
         } else if (this === controlTarget) {
             this.handleError('cannot set target to self');
-            return false;
-        } else if (this.propertyName !== controlTarget.propertyName) {
-            this.handleError(`target control must have propertyName:${this.propertyName} not propertyName:${controlTarget.propertyName}`);
             return false;
         } else {
             return true;
@@ -54,14 +50,5 @@ export class FollowControl extends BaseControl {
 // Event String Constants
 FollowControl.START = 'follow_start';
 FollowControl.STOP  = 'follow_stop';
-
-export var FollowControlProvider = {
-    get: function (model) {
-        var config = {
-            events: new Events().setChannel('follow_control')
-        };
-        return new FollowControl(config, model);
-    }
-}
 
 export default FollowControl;

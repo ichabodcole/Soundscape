@@ -1,43 +1,37 @@
 import BaseControl from '../../../../src/soundscape/property-controls/base-control';
 
 describe ('BaseControl', function () {
-    var bc, config, events, listener, model;
+    var bc, options, events, listener, model;
 
     beforeEach(function () {
         events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
-        config = {
-            events: events
+        options = {
+            events: events,
+            model: {
+                propertyName: 'baseProperty',
+                value: 0.5
+            }
         };
         listener  = {
             update: function () {
                 return true;
             }
         };
-        model = {
-            propertyName: 'baseProperty',
-            value: 0.5
-        };
-        bc = new BaseControl('BaseControl', config, model);
+        bc = new BaseControl(options);
     });
 
     describe ('constructor', function () {
 
         it ('should not throw and error', function () {
             expect(function () {
-                new BaseControl('BaseControl', config, model);
+                new BaseControl(options);
             }).not.toThrow();
         });
 
-        it ('should throw an error if no propertyName is defined in the model', function () {
+        xit ('should throw an error if no propertyName is defined in the model', function () {
             expect(function () {
-                new BaseControl('BaseControl', config, {});
+                new BaseControl('BaseControl', options, {});
             }).toThrow(new Error ('BaseControl: model object must have a propertyName attribute defined'));
-        });
-
-        it ('should throw an error if the config object does not have an events attribute', function () {
-            expect(function () {
-                new BaseControl('BaseControl', {}, model);
-            }).toThrow(new Error ('BaseControl: config object must have an events attribute set to an Events instance'));
         });
     });
 
@@ -50,6 +44,11 @@ describe ('BaseControl', function () {
 
             it ('should get the models propertyName value', function () {
                 expect(bc.propertyName).toBe('baseProperty');
+            });
+
+            it ('should set the models propertyName value', function() {
+                bc.propertyName = 'chunky';
+                expect(bc.model.propertyName).toBe('chunky');
             });
         });
 
@@ -98,7 +97,7 @@ describe ('BaseControl', function () {
             it ('should throw an error if an invalid event type is passed in', function () {
                 expect(function ( ) {
                     bc.on('invalidEvent', listener.update, listener);
-                }).toThrow(new Error ('BaseControl: attempting to listen to invalid event: invalidEvent'));
+                }).toThrow(new Error ('Property Control: attempting to listen to invalid event: invalidEvent'));
             });
 
             it ('should return a token string', function () {

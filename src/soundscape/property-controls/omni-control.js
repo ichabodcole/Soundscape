@@ -17,8 +17,8 @@ var omniControlDefaults = {
 
 
 class OmniControl extends BaseControl {
-    constructor (config={}, model={}) {
-        super('OmniControl', config, model);
+    constructor (options) {
+        super(options);
 
         this.controlTypes = [
             OmniControl.RANGE_CONTROL,
@@ -29,9 +29,9 @@ class OmniControl extends BaseControl {
         this.controlInstance;
         // Setup the controls container obj
         this.controls = {};
-        this.controls[OmniControl.RANGE_CONTROL]  = RangeControlProvider.get({ propertyName: this.model.propertyName });
-        this.controls[OmniControl.FOLLOW_CONTROL] = FollowControlProvider.get({ propertyName: this.model.propertyName });
-        this.controls[OmniControl.GRAPH_CONTROL]  = GraphControlProvider.get({ propertyName: this.model.propertyName });
+        this.controls[OmniControl.RANGE_CONTROL]  = new RangeControl();
+        this.controls[OmniControl.FOLLOW_CONTROL] = new FollowControl({});
+        this.controls[OmniControl.GRAPH_CONTROL]  = new GraphControl({});
 
         // Default to a range control if no control is specified in the model object
         this.controlType = this.model.controlType || OmniControl.RANGE_CONTROL;

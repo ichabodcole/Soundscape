@@ -2,7 +2,7 @@ import Timer from '../../../../src/soundscape/services/timer';
 import Utils from '../../../../src/soundscape/services/utils';
 
 describe ('Timer', function() {
-    var tm, events, config, model, update;
+    var tm, events, options, model, update;
 
     beforeEach(function() {
         events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
@@ -10,18 +10,20 @@ describe ('Timer', function() {
         update = function ( ) {
             return true;
         };
-        config = {
+
+        options = {
             events: events,
-            interval: 50
+            interval: 50,
+            model: {}
         };
-        model = {};
-        tm = new Timer(config, model);
+
+        tm = new Timer(options);
     });
 
     describe ('constructor', function() {
         it ('should not throw an error', function() {
             expect(function() {
-                new Timer(config, model);
+                new Timer(options);
             }).not.toThrow;
         });
     });
@@ -222,7 +224,7 @@ describe ('Timer', function() {
             });
 
             it ('should throw and error if playTime is not set to a valid value', function() {
-                var tm = new Timer(config, model);
+                var tm = new Timer(options);
                 expect(function() {
                     tm.start();
                 }).toThrow(new Error('Timer: valid playTime must be set before calling start'));

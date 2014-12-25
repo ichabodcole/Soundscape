@@ -3,29 +3,29 @@ import GraphControl from '../../../../src/soundscape/property-controls/graph-con
 import { Interpolation } from '../../../../src/soundscape/common/math';
 
 describe ('GraphControl', function () {
-    var gc, events, timer, config, model, listener;
+    var gc, events, timer, options, model, listener;
 
     beforeEach(function () {
         events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
 
-        config =  {
-            events: events
-        };
-        model = {
-            propertyName: 'myGraphProperty',
-            points: [
-                { type: 1, t: 0.25, v: 0.55 },
-                { type: 0, t: 0, v: 0.75 },
-                { type: 0, t: 0.5, v: 0.35 },
-                { type: 0, t: 0.75, v: 0.35  }
-            ]
+        options =  {
+            events: events,
+            model: {
+                propertyName: 'myGraphProperty',
+                points: [
+                    { type: 1, t: 0.25, v: 0.55 },
+                    { type: 0, t: 0, v: 0.75 },
+                    { type: 0, t: 0.5, v: 0.35 },
+                    { type: 0, t: 0.75, v: 0.35  }
+                ]
+            }
         };
         listener = {
             update: function () {
                 return true;
             }
         };
-        gc = new GraphControl(config, model);
+        gc = new GraphControl(options);
     });
 
     describe ('constructor', function () {
@@ -35,7 +35,7 @@ describe ('GraphControl', function () {
 
         it ('should not throw an error', function () {
             expect(function () {
-                new GraphControl(config, model);
+                new GraphControl(options);
             });
         });
 
@@ -51,7 +51,7 @@ describe ('GraphControl', function () {
             });
 
             it ('should return the models points array', function () {
-                expect(gc.points).toBe(model.points);
+                expect(gc.points).toBe(options.model.points);
             });
 
             it ('should set the models points array', function ( ){
@@ -115,14 +115,14 @@ describe ('GraphControl', function () {
             });
 
             it ('should not remove a point if a pointIndex is not supplied', function () {
-                var orgPoints = Object.assign([], model.points);
+                var orgPoints = Object.assign([], options.model.points);
                 gc.removePoint();
                 expect(gc.points).toEqual(orgPoints);
             });
 
             it ('should remove a point based on the pointIndex argument', function () {
                 var orgPointsLength = gc.points.length;
-                var filtered = model.points.filter(function (element, index) {
+                var filtered = options.model.points.filter(function (element, index) {
                     return (index !== 1);
                 });
                 gc.removePoint(1);

@@ -1,13 +1,12 @@
 // Import dependencies
 import BaseControl from './base-control';
-import Events from '../services/events';
 import { Interpolation } from '../common/math';
 
 export class GraphControl extends BaseControl {
-    constructor (config, model={}) {
-        super('GraphControl', config, model);
+    constructor (options={}) {
+        super(options);
 
-        if (this.model.points  != null) {
+        if (this.model.points != null) {
             this.sortPointsByTime();
         }
 
@@ -111,14 +110,5 @@ export class GraphControl extends BaseControl {
 // Event String Constants
 GraphControl.ADD_POINTS   = 'add_points';
 GraphControl.REMOVE_POINT = 'remove_point';
-
-export var GraphControlProvider = {
-    get: function (model) {
-        var config = {
-            events: new Events().setChannel('graphControl')
-        };
-        return new GraphControl(config, model);
-    }
-};
 
 export default GraphControl;

@@ -1,9 +1,10 @@
 import Events from './events';
 
 export class Ticker {
-    constructor (config={}) {
-        this.events      = config.events;
-        this.model       = {};
+    constructor (options) {
+        // Allow option to override events object if desired.
+        this.events      = options.events || new Events().setChannel('ticker');
+        this.model       = Object.assign({}, options.model) || {};
         this.validEvents = [
             Ticker.TICK,
             Ticker.START,
@@ -11,7 +12,7 @@ export class Ticker {
         ];
         // Initialize Model
         this.tickInterval = null;
-        this.interval = config.interval;
+        this.interval = options.interval || 50;
         this.state = Ticker.STOPPED;
     }
 
@@ -82,13 +83,5 @@ Ticker.STOP  = 'stop';
 // Ticker states
 Ticker.STOPPED = 'stopped';
 Ticker.TICKING = 'ticking';
-
-export var TickerProvider = {
-    get: function (config={}) {
-        config.events   = config.events || new Events().setChannel('ticker');
-        config.interval = config.interval || 50;
-        return new Ticker(config);
-    }
-};
 
 export default Ticker;

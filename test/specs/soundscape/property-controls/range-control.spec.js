@@ -1,36 +1,31 @@
 import RangeControl from '../../../../src/soundscape/property-controls/range-control';
 
 describe ('RangeControl', function () {
-    var rc, config, events, listener, model;
+    var rc, options, events, listener, model;
 
     beforeEach(function () {
         events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
-        config = {
-            events: events
+        options = {
+            events: events,
+            controlName: 'RangeControl',
+            model: {
+                propertyName: 'myProperty',
+                value: 0.5
+            }
         };
         listener = {
             update: function () {
                 return true;
             }
         };
-        model = {
-            propertyName: 'myProperty',
-            value: 0.5
-        };
-        rc = new RangeControl(config, model);
+        rc = new RangeControl(options);
     });
 
     describe ('constructor', function () {
         it ('should not throw and error', function () {
             expect(function () {
-                new RangeControl(config, model);
+                new RangeControl(options);
             }).not.toThrow();
-        });
-
-        it ('should throw an error if the config object does not have an events attribute', function () {
-            expect(function () {
-                new RangeControl({});
-            }).toThrow(new Error ('RangeControl: config object must have an events attribute set to an Events instance'));
         });
     });
 

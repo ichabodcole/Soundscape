@@ -2,8 +2,8 @@ import Events from './events';
 import Ticker from './ticker';
 
 export class Timer extends Ticker {
-    constructor (config, model={}) {
-        super(config);
+    constructor (options) {
+        super(options);
 
         this.validEvents = [
             Timer.TICK,
@@ -15,14 +15,11 @@ export class Timer extends Ticker {
 
         this.timeAtPause = 0;
 
-        this.model             = Object.assign({}, model);
         this.model.state       = Timer.STOPPED;
         this.model.startTime   = null;
         this.model.currentTime = this.model.currentTime || null;
         this.model.epsilon     = this.model.epsilon || null;
         this.model.playTime    = this.model.playTime || null;
-
-        this.interval = config.interval;
     }
 
     start () {
@@ -152,13 +149,5 @@ Timer.PAUSE    = 'pause';
 Timer.COMPLETE = 'complete';
 // Timer states
 Timer.PAUSED   = 'paused';
-
-export var TimerProvider = {
-    get: function (config={}, model={}) {
-        config.events   = config.events || new Events().setChannel('timer');
-        config.interval = config.interval || 50;
-        return new Timer(config, model);
-    }
-}
 
 export default Timer;
