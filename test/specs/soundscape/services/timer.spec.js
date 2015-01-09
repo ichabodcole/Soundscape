@@ -23,7 +23,7 @@ describe ('Timer', function() {
     describe ('constructor', function() {
         it ('should not throw an error', function() {
             expect(function() {
-                new Timer(options);
+                new Timer();
             }).not.toThrow;
         });
     });

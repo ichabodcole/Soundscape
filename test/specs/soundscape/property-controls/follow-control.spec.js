@@ -2,17 +2,17 @@ import BaseControl from '../../../../src/soundscape/property-controls/base-contr
 import FollowControl from '../../../../src/soundscape/property-controls/follow-control';
 
 describe ('FollowControl', function () {
-    var fc, events, options, model, listener;
+    var fc, events, options, model, listener, noop;
+    noop = function() { return true; };
+
     beforeEach(function () {
         events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
         events.on.and.returnValue('myTokenId01');
 
         options = {
-            events: events,
+            //events: events,
             controlName: 'FollowControl',
-            model: {
-                propertyName: 'myProperty'
-            }
+            propertyName: 'myProperty'
         };
         listener = {
             update: function () {
@@ -25,7 +25,7 @@ describe ('FollowControl', function () {
     describe ('constructor', function () {
         it ('should not throw an error', function () {
             expect(function () {
-                new FollowControl(options);
+                new FollowControl();
             }).not.toThrow();
         });
     });
@@ -35,7 +35,7 @@ describe ('FollowControl', function () {
             var control;
 
             beforeEach(function () {
-                control = new BaseControl('base', options, model);
+                control = new BaseControl(options);
             });
 
             it ('should return undefined if followProperty has not been set', function () {
@@ -81,7 +81,7 @@ describe ('FollowControl', function () {
                 var otherModel = {
                     propertyName: 'otherProperty'
                 };
-                var bc = new BaseControl('BaseControl', options, otherModel);
+                var bc = new BaseControl(otherOptions);
                 expect(function () {
                     fc.target = bc;
                 }).toThrow(new Error('FollowControl: target control must have propertyName:myProperty not propertyName:otherProperty'));
@@ -91,7 +91,7 @@ describe ('FollowControl', function () {
                 var otherModel = {
                     propertyName: 'otherProperty'
                 };
-                var bc = new BaseControl('BaseControl', options, otherModel);
+                var bc = new BaseControl(otherOptions);
                 expect(function () {
                     fc.target = bc;
                 }).toThrow();
@@ -143,6 +143,7 @@ describe ('FollowControl', function () {
             });
 
             it ('should call the events broadcast method with the START event', function () {
+                spyOn(fc.events, 'broadcast');
                 fc.target = bc;
                 fc.start();
                 expect(fc.events.broadcast).toHaveBeenCalledWith(FollowControl.START);
@@ -178,11 +179,59 @@ describe ('FollowControl', function () {
 
 
             it ('should call the events broadcast method with the STOP event', function () {
+                spyOn(fc.events, 'broadcast');
                 fc.target = bc;
                 fc.start();
                 fc.stop();
                 expect(fc.events.broadcast).toHaveBeenCalledWith(FollowControl.STOP);
             });
+        });
+
+        describe ('on', function() {
+            describe('passing in a START event', function() {
+                it('should not throw an error', function() {
+                    expect(function() {
+                        fc.on(FollowControl.START, function(){});
+                    }).not.toThrow();
+                });
+            })
+
+            describe('passing in a STOP event', function() {
+                it('should not throw an error', function() {
+                    expect(function() {
+                        fc.on(FollowControl.STOP, function(){});
+                    }).not.toThrow();
+                });
+            });
+
+            describe('passing in a VALUE_CHANGE event', function() {
+                it('should not throw an error', function() {
+                    expect(function() {
+                        fc.on(FollowControl.VALUE_CHANGE, function(){});
+                    }).not.toThrow();
+                });
+            });
+        });
+
+    });
+
+    describe ('when a follow controls target value changes', function() {
+        var bc;
+        beforeEach(function () {
+
+            var bcoptions = {
+                controlName: 'BaseControl',
+            };
+            bc = new BaseControl(bcoptions);
+        });
+
+        it ('should update the follow controls percent property to match the targets', function() {
+            fc.target = bc;
+            fc.start();
+
+            bc.value = 0.9;
+
+            expect(fc.percent).toBe(bc.percent);
         });
     });
 });

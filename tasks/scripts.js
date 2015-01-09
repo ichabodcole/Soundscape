@@ -14,6 +14,7 @@ var gulp        = require('gulp'),
 
 function handleError(err) {
     console.error(err.toString());
+    //console.error('BURP');
     process.stdout.write('\x07');
     this.emit('end');
 }
@@ -29,6 +30,7 @@ gulp.task('jsCompile', jsCompile);
 function jsHint () {
     return gulp.src(config.files.js.src, config.files.examples.js.src)
         .pipe(glp_jshint())
+        .on('error', handleError)
         .pipe(glp_jshint.reporter(jsstyle));
 }
 
@@ -37,9 +39,9 @@ function js () {
 
     return browserify({ standalone: 'SoundscapeProvider', debug: true })
         .transform(es6ify)
-        .on('error', handleError)
         .require(require.resolve(src), {entry: true})
         .bundle()
+        .on('error', handleError)
         .pipe(source('soundscape.js'))
         .pipe(gulp.dest(config.files.examples.js.dest));
 }
@@ -61,11 +63,11 @@ function jsExamples () {
     var src = '../src/examples/app.js';
 
     return browserify({ debug:true })
-        .transform(es6ify)
-        .on('error', handleError)
         // .add('./bower_components/traceur-runtime/traceur-runtime.js')
+        .transform(es6ify)
         .require(require.resolve(src), {entry: true})
         .bundle()
+        .on('error', handleError)
         .pipe(source('app.js'))
         .pipe(gulp.dest(config.files.examples.js.dest));
 

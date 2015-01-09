@@ -10,15 +10,13 @@ describe ('GraphControl', function () {
 
         options =  {
             events: events,
-            model: {
-                propertyName: 'myGraphProperty',
-                points: [
-                    { type: 1, t: 0.25, v: 0.55 },
-                    { type: 0, t: 0, v: 0.75 },
-                    { type: 0, t: 0.5, v: 0.35 },
-                    { type: 0, t: 0.75, v: 0.35  }
-                ]
-            }
+            propertyName: 'myGraphProperty',
+            points: [
+                { type: 1, t: 0.25, v: 0.55 },
+                { type: 0, t: 0, v: 0.75 },
+                { type: 0, t: 0.5, v: 0.35 },
+                { type: 0, t: 0.75, v: 0.35  }
+            ]
         };
         listener = {
             update: function () {
@@ -35,7 +33,7 @@ describe ('GraphControl', function () {
 
         it ('should not throw an error', function () {
             expect(function () {
-                new GraphControl(options);
+                new GraphControl();
             });
         });
 
@@ -51,7 +49,7 @@ describe ('GraphControl', function () {
             });
 
             it ('should return the models points array', function () {
-                expect(gc.points).toBe(options.model.points);
+                expect(gc.points).toBe(options.points);
             });
 
             it ('should set the models points array', function ( ){
@@ -115,14 +113,14 @@ describe ('GraphControl', function () {
             });
 
             it ('should not remove a point if a pointIndex is not supplied', function () {
-                var orgPoints = Object.assign([], options.model.points);
+                var orgPoints = Object.assign([], options.points);
                 gc.removePoint();
                 expect(gc.points).toEqual(orgPoints);
             });
 
             it ('should remove a point based on the pointIndex argument', function () {
                 var orgPointsLength = gc.points.length;
-                var filtered = options.model.points.filter(function (element, index) {
+                var filtered = options.points.filter(function (element, index) {
                     return (index !== 1);
                 });
                 gc.removePoint(1);

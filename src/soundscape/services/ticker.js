@@ -1,10 +1,10 @@
 import Events from './events';
 
 export class Ticker {
-    constructor (options) {
+    constructor(options={}) {
         // Allow option to override events object if desired.
         this.events      = options.events || new Events().setChannel('ticker');
-        this.model       = Object.assign({}, options.model) || {};
+        this.model       = Object.assign({}, options.model || {});
         this.validEvents = [
             Ticker.TICK,
             Ticker.START,

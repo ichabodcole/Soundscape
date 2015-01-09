@@ -1,12 +1,23 @@
+
+
+//Controls Examples;
+import baseControlExample from './scripts/controls/base-control-example';
+baseControlExample();
+
+import followControlExample from './scripts/controls/follow-control-example';
+followControlExample();
+
+// import graphControlExample from './scripts/controls/graph-control-example';
+// graphControlExample();
+
+import omniControlExample from './scripts/controls/omni-control-example';
+omniControlExample();
+
 // import SoundModule from '../../soundscape/modules/sound-module';
 // var scp = SoundscapeFactory.create();
 
-// import { FollowControl, FollowControlProvider } from '../soundscape/property-controls/follow-control';
-// import { RangeControl, RangeControlProvider } from '../soundscape/property-controls/range-control';
-import { GraphControl, GraphControlProvider } from '../soundscape/property-controls/graph-control';
-
 //import { Interpolation } from '../soundscape/common/math';
-import { TimerProvider, Timer } from '../soundscape/services/timer';
+//import Ticker from '../soundscape/services/ticker';
 
 // Interpolation.cubic(t, p1, cp1, cp2, p2);
 
@@ -29,46 +40,49 @@ import { TimerProvider, Timer } from '../soundscape/services/timer';
 // }
 
 // // interpPoints.unshift([cp1.x, cp1.y], [cp2.x, cp2.y]);
-var points = [
-        { type:0, t:0, v:0.45 },
-        { type:0, t:0.05, v:0.25 },
-        { type:0, t:0.15, v:0.25 },
-        { type:0, t:0.25, v:0.65 },
-        { type:0, t:0.35, v:0.55 },
-        { type:0, t:0.5, v:0.7 },
-        { type:0, t:0.65, v:0.35 },
-        { type:0, t:0.75, v:0.45 },
-        { type:0, t:1, v:0.25 }
-    ];
 
-var timer = TimerProvider.get();
 
-var gc = GraphControlProvider.get({
-    propertyName: 'volume',
-    points: points
-});
 
-gc.on(GraphControl.VALUE_CHANGE, (e, value) => {
-    console.log('Graph Value:', value);
-});
+// var timer = new Timer({ interval:500 });
+// var omniCtrl = new OmniControl({ min:100,  max:1500 });
 
-timer.interval = 50;
-timer.playTime = 10000;
+// function RangeTransform(input, min, max) {
+//     var diff = max - min;
+//     return (input * diff) + min;
+// }
 
-timer.on(Timer.STOP, function(e) {
-    console.log('Timer:STOP');
-})
+// omniCtrl.on(OmniControl.VALUE_CHANGE, (e, value, percent) => {
+//     // console.log('OmniControl Value:', value, RangeTransform(value, 100, 1500));
+// });
 
-timer.on(Timer.COMPLETE, function(e) {
-    console.log('Timer:COMPLETE');
-});
+//timer.interval = 50;
+// timer.playTime = 10000;
 
-timer.on(Timer.TICK,  function(e, data) {
-    //console.log(data.playTime, data.currentTime, data.epsilon);
-    gc.valueAtTime(data.epsilon);
-});
+// timer.on(Timer.START, function(e) {
+//     console.log('Timer:START');
+// });
 
-timer.start();
+// timer.on(Timer.STOP, function(e) {
+//     console.log('Timer:STOP');
+// })
+
+// timer.on(Timer.COMPLETE, function(e) {
+//     console.log('Timer:COMPLETE');
+// });
+
+// timer.on(Timer.TICK,  function(e, data) {
+//     console.log(data.playTime, data.currentTime, data.epsilon);
+//     if (omniCtrl.controlType === OmniControl.GRAPH_CONTROL) {
+//         omniCtrl.controlInstance.valueAtTime(data.epsilon);
+//     }
+// });
+
+// setTimeout(function() {
+//     omniCtrl.controlType = OmniControl.GRAPH_CONTROL;
+//     omniCtrl.controlInstance.addPoints(points);
+// }, 2500);
+
+// timer.start();
 
 // var chartDataIntrp = [];
 

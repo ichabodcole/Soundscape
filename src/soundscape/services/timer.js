@@ -1,8 +1,7 @@
-import Events from './events';
 import Ticker from './ticker';
 
 export class Timer extends Ticker {
-    constructor (options) {
+    constructor (options={}) {
         super(options);
 
         this.validEvents = [
@@ -71,8 +70,8 @@ export class Timer extends Ticker {
                 epsilon: 1
             };
 
-            this.events.broadcast(Timer.COMPLETE);
             this.events.broadcast(Timer.TICK, data);
+            this.events.broadcast(Timer.COMPLETE);
 
         } else {
             this.currentTime = currentTime;
