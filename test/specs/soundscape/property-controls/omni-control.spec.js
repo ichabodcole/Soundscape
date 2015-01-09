@@ -1,7 +1,7 @@
 import OmniControl from '../../../../src/soundscape/property-controls/omni-control';
-import RangeControl from '../../../../src/soundscape/property-controls/range-control';
-import FollowControl from '../../../../src/soundscape/property-controls/follow-control';
-import GraphControl from '../../../../src/soundscape/property-controls/graph-control';
+//import RangeControl from '../../../../src/soundscape/property-controls/base-control';
+//import FollowControl from '../../../../src/soundscape/property-controls/follow-control';
+//import GraphControl from '../../../../src/soundscape/property-controls/graph-control';
 
 describe ('OmniControl', function () {
     var omniCtrl, options, events;
@@ -11,50 +11,68 @@ describe ('OmniControl', function () {
     });
 
     beforeEach(function () {
+        //var baseControl = jasmine.createSpyObj('baseControl', ['on', 'off'])
+
         events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
         events.on.and.returnValue('someToken');
         options = {
-            events: events,
             controlName: 'OmniControl',
-            model: {
-                propertyName: 'volume',
-                rangeValue: 0.5,
-                value: 0.5
-            }
+            propertyName: 'volume',
+            min: 0,
+            max: 10,
+            value: 1
         };
 
         omniCtrl = new OmniControl(options);
     });
 
+    describe('contructor', function() {
+        it('should not throw', function() {
+            var options = {
+                events:events,
+                min: 100,
+                max: 400
+            };
+            expect(function() {
+                new OmniControl(options);
+            }).not.toThrow();
+        });
+    });
+
     describe('properties', function() {
 
-        describe('controlInstance', function() {
-            it('should be set to the current controls instance', function() {
-                expect(omniCtrl.controlInstance instanceof RangeControl).toBe(true);
+        describe('max', function() {
+            it('should set the models max property and the max properties of all sub controls', function() {
+                omniCtrl.max = 12;
+                expect(omniCtrl.model.max).toBe(12);
+                expect(omniCtrl.controlInstance.max).toBe(omniCtrl.max);
+            });
+        });
+
+        describe('min', function() {
+            it('should set the models min property and the min properties of all sub controls', function() {
+                omniCtrl.min = 5;
+                expect(omniCtrl.model.min).toBe(5);
+                expect(omniCtrl.controlInstance.min).toBe(omniCtrl.min);
             });
         });
 
         describe('controlType', function() {
 
-            it ('should default to the RANGE_CONTROL type', function(){
-                expect(omniCtrl.controlType).toBe(OmniControl.RANGE_CONTROL);
+            it ('should default to the BASE_CONTROL type', function(){
+                expect(omniCtrl.controlType).toBe(OmniControl.BASE_CONTROL);
             });
 
             it('should use the provide models controlType property if present', function() {
-                options.model.controlType = OmniControl.FOLLOW_CONTROL;
+                options.controlType = OmniControl.FOLLOW_CONTROL;
                 omniCtrl = new OmniControl(options);
                 expect(omniCtrl.controlType).toBe(OmniControl.FOLLOW_CONTROL);
             });
 
             describe('as a setter', function() {
                 it('should set the models controlType property', function(){
-                    omniCtrl.controlType = OmniControl.RANGE_CONTROL;
-                    expect(omniCtrl.model.controlType).toBe(OmniControl.RANGE_CONTROL);
-                });
-
-                it('should set controlInstance the control instance associated with the controlType', function() {
-                    omniCtrl.controlType = OmniControl.FOLLOW_CONTROL;
-                    expect(omniCtrl.controlInstance instanceof FollowControl).toBe(true);
+                    omniCtrl.controlType = OmniControl.BASE_CONTROL;
+                    expect(omniCtrl.model.controlType).toBe(OmniControl.BASE_CONTROL);
                 });
 
                 it('should only accept valid controlTypes', function() {
@@ -64,31 +82,102 @@ describe ('OmniControl', function () {
                 });
 
                 it('should broadcast the CONTROL_TYPE_CHANGE event', function() {
+                    spyOn(omniCtrl.events, 'broadcast');
                     omniCtrl.controlType = OmniControl.FOLLOW_CONTROL;
-                    expect(events.broadcast).toHaveBeenCalledWith(OmniControl.CONTROL_TYPE_CHANGE, OmniControl.FOLLOW_CONTROL);
+                    expect(omniCtrl.events.broadcast).toHaveBeenCalledWith(OmniControl.CONTROL_TYPE_CHANGE, OmniControl.FOLLOW_CONTROL);
                 });
 
-                xit('should start listening to value changes from the asigned control instance', function() {
-                    expect();
+                it('should not broadcast the CONTROL_TYPE_CHANGE if set to the same type of control', function() {
+                    events.broadcast.calls.reset();
+                    omniCtrl.controlType = OmniControl.BASE_CONTROL;
+                    expect(events.broadcast.calls.count()).toBe(0);
                 });
 
-                xit('should stop listening value changes from other control instances', function() {
+                describe('setting a base control', function() {
+                    it('should start listening to value changes from the base control', function() {
+                        omniCtrl.controlType = OmniControl.BASE_CONTROL;
+                        omniCtrl.controlInstance.value = 4;
+                        expect(omniCtrl.value).toBe(4);
+                        expect(omniCtrl.percent).toBe(0.4);
+                    });
 
+                    it('should stop listening value changes from other control instances', function() {
+                        omniCtrl.controlType = OmniControl.FOLLOW_CONTROL;
+                        var followControl = omniCtrl.controlInstance;
+
+                        omniCtrl.controlType = OmniControl.BASE_CONTROL;
+                        var baseControl = omniCtrl.controlInstance;
+                        baseControl.value = 6;
+
+                        followControl.value = 0.6;
+
+                        expect(omniCtrl.value).toBe(6);
+                        expect(omniCtrl.percent).toBe(0.6);
+                    });
+                });
+
+                describe('setting a follow control', function() {
+                    it('should start listening to value changes from the follow control', function() {
+                        omniCtrl.controlType = OmniControl.FOLLOW_CONTROL;
+                        omniCtrl.controlInstance.value = 0.85;
+                        expect(omniCtrl.value).toBe(0.85);
+                    });
+
+                    it('should stop listening value changes from other control instances', function() {
+                        omniCtrl.controlType = OmniControl.BASE_CONTROL;
+                        var baseControl = omniCtrl.controlInstance;
+
+                        omniCtrl.controlType = OmniControl.FOLLOW_CONTROL;
+                        var followControl = omniCtrl.controlInstance;
+                        followControl.value = 0.85;
+
+                        baseControl.value = 0.25;
+
+                        expect(omniCtrl.value).toBe(0.85);
+                    });
+                });
+
+                describe('setting a graph control', function() {
+                    it('should start listening to value changes from the follow control', function() {
+                        omniCtrl.controlType = OmniControl.GRAPH_CONTROL;
+                        omniCtrl.controlInstance.value = 0.85;
+                        expect(omniCtrl.value).toBe(0.85);
+                    });
+
+                    it('should stop listening value changes from other control instances', function() {
+                        omniCtrl.controlType = OmniControl.BASE_CONTROL;
+                        var baseControl = omniCtrl.controlInstance;
+
+                        omniCtrl.controlType = OmniControl.GRAPH_CONTROL;
+                        var graphControl = omniCtrl.controlInstance;
+                        graphControl.value = 0.85;
+
+                        baseControl.value = 0.25;
+
+                        expect(omniCtrl.value).toBe(0.85);
+                    });
                 });
             });
 
-
             describe ('as a getter', function() {
                 it('should return the models controlType property', function(){
-                    omniCtrl.model.controlType = OmniControl.RANGE_CONTROL;
-                    expect(omniCtrl.controlType).toBe(OmniControl.RANGE_CONTROL);
+                    omniCtrl.model.controlType = OmniControl.BASE_CONTROL;
+                    expect(omniCtrl.controlType).toBe(OmniControl.BASE_CONTROL);
                 });
             });
         });
 
-    });
+        describe('controlInstance', function() {
+            beforeEach(function() {
+                options.baseControl = jasmine.createSpyObj('baseControl', ['on', 'off', 'broadcast']);
+                options.followControl = jasmine.createSpyObj('followControl', ['on', 'off', 'broadcast']);
+                omniCtrl = new OmniControl(options);
+            });
 
-    describe('methods', function() {
-
+            it('should return an instance of a control associated with the current controlType', function() {
+                omniCtrl.controlType = OmniControl.FOLLOW_CONTROL;
+                expect(omniCtrl.controlInstance).toBe(options.followControl);
+            });
+        });
     });
 });

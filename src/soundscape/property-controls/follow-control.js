@@ -4,15 +4,16 @@ import BaseControl from './base-control';
 export class FollowControl extends BaseControl {
     constructor (options={}) {
         super(options);
+        this.validEvents.push(FollowControl.START, FollowControl.STOP);
         this.targetToken = null;
     }
 
     validateTarget (controlTarget) {
         if (!(controlTarget instanceof BaseControl)) {
-            this.handleError('target property must be set to an instance of BaseControl');
+            this.__handleError('target property must be set to an instance of BaseControl');
             return false;
         } else if (this === controlTarget) {
-            this.handleError('cannot set target to self');
+            this.__handleError('cannot set target to self');
             return false;
         } else {
             return true;
@@ -21,8 +22,8 @@ export class FollowControl extends BaseControl {
 
     start () {
         if (this.target != null) {
-            this.targetToken = this.target.on(FollowControl.VALUE_CHANGE, (e, value)=> {
-                this.value = value;
+            this.targetToken = this.target.on(FollowControl.VALUE_CHANGE, (e, data)=> {
+                this.percent = data.percent;
             }, this);
             this.events.broadcast(FollowControl.START);
         }

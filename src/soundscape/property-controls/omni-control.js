@@ -1,9 +1,8 @@
 import utils from '../services/utils';
-import Events from '../services/events';
+
 import BaseControl from './base-control';
-import { RangeControlProvider, RangeControl } from './range-control';
-import { FollowControlProvider, FollowControl } from './follow-control';
-import { GraphControlProvider, GraphControl } from './graph-control';
+import FollowControl from './follow-control';
+import GraphControl from './graph-control';
 
 var omniControlDefaults = {
         propertyName: null,
@@ -15,31 +14,8 @@ var omniControlDefaults = {
         graph: []
     };
 
-
 class OmniControl extends BaseControl {
-    constructor (options) {
-        super(options);
-
-        this.controlTypes = [
-            OmniControl.RANGE_CONTROL,
-            OmniControl.FOLLOW_CONTROL,
-            OmniControl.GRAPH_CONTROL
-        ];
-
-        this.controlInstance;
-        // Setup the controls container obj
-        this.controls = {};
-        this.controls[OmniControl.RANGE_CONTROL]  = new RangeControl();
-        this.controls[OmniControl.FOLLOW_CONTROL] = new FollowControl({});
-        this.controls[OmniControl.GRAPH_CONTROL]  = new GraphControl({});
-
-        // Default to a range control if no control is specified in the model object
-        this.controlType = this.model.controlType || OmniControl.RANGE_CONTROL;
-        // this.model  = Object.assign({}, omniControlDefaults, model);
-        // Add OmniControl spefic events to the validEvents Array.
-        this.validEvents.push(OmniControl.CONTROL_TYPE_CHANGE);
-    }
-
+    // "Private" methods
     __isValidControlType (controlType) {
         if(this.controlTypes.indexOf(controlType) === -1) {
             return false;
@@ -47,11 +23,75 @@ class OmniControl extends BaseControl {
         return true;
     }
 
+    __onValueChange(e, data) {
+        this.value = data.value;
+    }
+
+    __setControlProperty(controlRef, propertyName, value) {
+        this.controls[controlRef][propertyName] = value;
+    }
+
+    __setControlsProperty(propertyName, value) {
+        for (var controlRef in this.controls) {
+            this.__setControlProperty(controlRef, propertyName, value);
+        }
+    }
+
+    // Constructor Init Code
+    constructor (options={}) {
+        this.controlTypes = [
+            OmniControl.BASE_CONTROL,
+            OmniControl.FOLLOW_CONTROL,
+            OmniControl.GRAPH_CONTROL
+        ];
+
+        this.controlInstance;
+        this.controlToken;
+        // Setup the controls container obj
+        this.controls = {};
+        this.controls[OmniControl.BASE_CONTROL]   = options.baseControl   || new BaseControl(options);
+        this.controls[OmniControl.FOLLOW_CONTROL] = options.followControl || new FollowControl(options);
+        this.controls[OmniControl.GRAPH_CONTROL]  = options.graphControl  || new GraphControl(options);
+
+        super(options);
+        // Default to a range control if no control is specified in the model object
+        this.controlType = options.controlType || OmniControl.BASE_CONTROL;
+        // Add OmniControl spefic events to the validEvents Array.
+        this.validEvents.push(OmniControl.CONTROL_TYPE_CHANGE);
+    }
+
+    // Setters and Getters
+    set min (min) {
+        super.min = min;
+        this.__setControlsProperty('min', min);
+    }
+
+    get min () {
+        return super.min;
+    }
+
+    set max (max) {
+        super.max = max;
+        this.__setControlsProperty('max', max);
+    }
+
+    get max () {
+        return super.max;
+    }
+
     set controlType (controlType) {
         if(this.__isValidControlType(controlType)) {
-            this.model.controlType = controlType;
-            this.controlInstance = this.controls[controlType];
-            this.events.broadcast(OmniControl.CONTROL_TYPE_CHANGE, controlType);
+            if (this.controlType !== controlType) {
+                // Stop listening to the previous control instance
+                if(this.controlInstance != null) {
+                    this.controlInstance.off(this.controlToken, OmniControl.VALUE_CHANGE);
+                }
+
+                this.model.controlType = controlType;
+                this.events.broadcast(OmniControl.CONTROL_TYPE_CHANGE, controlType);
+                this.controlInstance = this.controls[controlType];
+                this.controlToken = this.controlInstance.on(OmniControl.VALUE_CHANGE, this.__onValueChange.bind(this));
+            }
         } else {
             throw new Error(`OmniControl: controlType (${controlType}), is not a valid controlType`);
         }
@@ -63,9 +103,9 @@ class OmniControl extends BaseControl {
 }
 
 // Control name constants
-OmniControl.RANGE_CONTROL       = 'range_control';
-OmniControl.FOLLOW_CONTROL      = 'follow_control';
-OmniControl.GRAPH_CONTROL       = 'graph_control';
+OmniControl.BASE_CONTROL   = 'base_control';
+OmniControl.FOLLOW_CONTROL = 'follow_control';
+OmniControl.GRAPH_CONTROL  = 'graph_control';
 // Event name constants
 OmniControl.CONTROL_TYPE_CHANGE = 'control_type_change';
 

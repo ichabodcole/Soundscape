@@ -6,6 +6,8 @@ export class GraphControl extends BaseControl {
     constructor (options={}) {
         super(options);
 
+        this.points = options.points || [];
+
         if (this.model.points != null) {
             this.sortPointsByTime();
         }

@@ -19,7 +19,7 @@ describe ('Ticker', function () {
     describe ('constructor', function () {
         it ('should not throw', function () {
             expect(function ( ) {
-                new Ticker(config);
+                new Ticker();
             }).not.toThrow();
         });
     });
