@@ -18,7 +18,6 @@ describe ('BinauralBeatModule', function () {
             //         };
             //     }
             // },
-            events: jasmine.createSpyObj('events', ['broadcast', 'on', 'off']),
             volume: {
                 min: 0,
                 max: 1,
@@ -214,21 +213,21 @@ describe ('BinauralBeatModule', function () {
 
         describe ('stop', function() {
             it ('should call the volume controls off method', function() {
-                spyOn(sm.volume, 'off');
+                spyOn(sm.volume, 'removeListener');
                 sm.stop();
-                expect(sm.volume.off).toHaveBeenCalled();
+                expect(sm.volume.removeListener).toHaveBeenCalled();
             });
 
-            it ('should call the pitch controls off method', function() {
-                spyOn(sm.pitch, 'off');
+            it ('should call the pitch controls removeListener method', function() {
+                spyOn(sm.pitch, 'removeListener');
                 sm.stop();
-                expect(sm.pitch.off).toHaveBeenCalled();
+                expect(sm.pitch.removeListener).toHaveBeenCalled();
             });
 
-            it ('should call the beatRate controls off method', function() {
-                spyOn(sm.beatRate, 'off');
+            it ('should call the beatRate controls removeListener method', function() {
+                spyOn(sm.beatRate, 'removeListener');
                 sm.stop();
-                expect(sm.beatRate.off).toHaveBeenCalled();
+                expect(sm.beatRate.removeListener).toHaveBeenCalled();
             });
         });
 

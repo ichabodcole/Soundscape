@@ -18,9 +18,18 @@ var binauralBeatDefaults = {
 };
 
 class BinauralBeatModule extends SoundModule {
+    // Private Methods
+    __onPitchChange (e) {
+        this.generator.setPitch(e.value);
+    }
+
+    __onBeatRateChange (e) {
+        this.generator.setBeatRate(e.value);
+    }
+
     constructor (options) {
-        this.pitchEventToken = null;
-        this.beatRateEventToken = null;
+        this.pitchListener = null;
+        this.beatRateListener = null;
 
         super(options);
         // Setup the sound generator
@@ -39,27 +48,21 @@ class BinauralBeatModule extends SoundModule {
         this.beatRate = new OmniControl(this.model.beatRate);
     }
 
-    // Event Handlers
-    onPitchChange (e, data) {
-        this.generator.setPitch(data.value);
-    }
-
-    onBeatRateChange (e, data) {
-        this.generator.setBeatRate(data.value);
-    }
-
     // Public API
     start() {
         super.start();
-        this.pitchEventToken    = this.pitch.on(OmniControl.VALUE_CHANGE, this.onPitchChange.bind(this));
-        this.beatRateEventToken = this.beatRate.on(OmniControl.VALUE_CHANGE, this.onBeatRateChange.bind(this));
+        this.pitchListener = this.__onPitchChange.bind(this)
+        this.beatRateListener = this.__onBeatRateChange.bind(this);
+
+        this.pitch.on(OmniControl.VALUE_CHANGE, this.pitchListener);
+        this.beatRate.on(OmniControl.VALUE_CHANGE, this.beatRateListener);
         this.generator.start();
     }
 
     stop() {
         super.stop();
-        this.pitch.off(this.pitchEventToken);
-        this.beatRate.off(this.beatRateEventToken);
+        this.pitch.removeListener(OmniControl.VALUE_CHANGE, this.pitchListener);
+        this.beatRate.removeListener(OmniControl.VALUE_CHANGE, this.beatRateListener);
         this.generator.stop();
     }
 
