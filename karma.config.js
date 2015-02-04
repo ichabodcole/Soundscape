@@ -28,10 +28,10 @@ module.exports = function (config) {
             'bower_components/binauralbeatjs/dist/binauralbeat.js',
             { pattern: 'src/soundscape/**/*.js', included:false, served: true },
             // { pattern: 'test/specs/soundscape/modules/*.spec.js', included:false },
-            { pattern: 'test/specs/soundscape/services/*.spec.js', included:false },
-            // { pattern: 'test/specs/soundscape/soundscape.spec.js', included:false },
+            // { pattern: 'test/specs/soundscape/services/*.spec.js', included:false },
+            { pattern: 'test/specs/soundscape/soundscape.spec.js', included:false }
             // { pattern: 'test/specs/soundscape/modules/*.spec.js', included:false }
-            { pattern: 'test/specs/soundscape/property-controls/omni-control.spec.js', included:false }
+            // { pattern: 'test/specs/soundscape/property-controls/*.spec.js', included:false }
         ],
 
         exclude: [

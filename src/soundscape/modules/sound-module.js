@@ -1,7 +1,8 @@
 import utils from '../services/utils';
-import Events from '../services/events';
 import AudioProvider from '../services/audio-provider';
 import OmniControl from '../property-controls/omni-control';
+
+var EventEmitter = require('events').EventEmitter;
 
 var soundModuleDefaults = {
     type: 'sound-module',
@@ -14,13 +15,19 @@ var soundModuleDefaults = {
     }
 };
 
-class SoundModule {
+class SoundModule extends EventEmitter {
+    // Private Methods
+    __onVolumeChange (e) {
+        if (this.mute === false) {
+            this.gain = e.value;
+        }
+    }
+
     constructor (options={}) {
-        this.volumeEventToken = null;
+        this.volumeListener = null;
 
         this.audioCtx   = options.audioCtx || AudioProvider.getContext();
         this.gainNode   = this.audioCtx.createGain();
-        this.events     = options.events || new Events().setChannel('soundModule');
 
         this.setDefaults();
         this.setOptions(options);
@@ -45,20 +52,17 @@ class SoundModule {
         this.volume = new OmniControl(this.model.volume);
     }
 
-    // Event Handlers
-    onVolumeChange (e, data) {
-        if (this.mute === false) {
-            this.gain = data.value;
-        }
-    }
-
     // Public API
     start () {
-        this.volumeEventToken = this.volume.on(OmniControl.VALUE_CHANGE, this.onVolumeChange.bind(this));
+        this.volumeListener = this.__onVolumeChange.bind(this);
+        this.volume.on(OmniControl.VALUE_CHANGE, this.volumeListener);
     }
 
     stop () {
-        this.volume.off(this.volumeEventToken);
+        if(this.volumeListener != null) {
+            this.volume.removeListener(OmniControl.VALUE_CHANGE, this.volumeListener);
+            this.volumeListener = null;
+        }
     }
 
     connect (gainNode) {

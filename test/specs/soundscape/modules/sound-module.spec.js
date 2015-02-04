@@ -18,7 +18,6 @@ describe ('SoundModule', function () {
                     };
                 }
             },
-            events: jasmine.createSpyObj('events', ['broadcast', 'on', 'off']),
             volume: {
                 min: 0,
                 max: 1,
@@ -141,9 +140,9 @@ describe ('SoundModule', function () {
 
         describe ('stop', function() {
             it ('should call the volume controls off method', function() {
-                spyOn(sm.volume, 'off');
+                spyOn(sm.volume, 'removeListener');
                 sm.stop();
-                expect(sm.volume.off).toHaveBeenCalled();
+                expect(sm.volume.removeListener).toHaveBeenCalled();
             });
         });
 

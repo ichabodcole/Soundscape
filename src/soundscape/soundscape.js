@@ -4,7 +4,7 @@ import SoundModuleFactory from './modules/module-factory';
 import AudioProvider from './services/audio-provider';
 import Timer from './services/timer';
 
-import Events from './services/events';
+var EventEmitter = require('events').EventEmitter;
 
 
 var soundscapeDefaults = {};
@@ -15,17 +15,16 @@ var soundscapeDefaults = {};
 * @param options object - contains dependencies necessary for soundscape to function.
 * @returns Soundscape
 */
-export class Soundscape {
+export class Soundscape extends EventEmitter {
     constructor (options={}) {
         // Setup variables using options object.
         this.audioCtx   = options.audioCtx || AudioProvider.getContext();
         this.timer      = options.timer || new Timer();
-        this.events     = options.events || new Events().setChannel('soundscape');
         this.__duration = options.duration || utils.mins2Mils(5);
         this.__modules  = [];
         this.state      = Soundscape.STOPPED;
 
-        this.timer.playTime = this.duration;
+        this.timer.duration = this.duration;
         // this.timer.on(Timer.COMPLETE, onTimerComplete);
     }
 
@@ -33,21 +32,21 @@ export class Soundscape {
     play() {
         this.state = Soundscape.PLAYING;
         this.timer.start();
-        this.events.broadcast(Soundscape.PLAY);
+        this.emit(Soundscape.PLAY);
         this.startModules();
     }
 
     pause() {
         this.state = Soundscape.PAUSED;
         this.timer.pause();
-        this.events.broadcast(Soundscape.PAUSE);
+        this.emit(Soundscape.PAUSE);
         this.stopModules();
     }
 
     stop() {
         this.state = Soundscape.STOPPED;
         this.timer.stop();
-        this.events.broadcast(Soundscape.STOP);
+        this.emit(Soundscape.STOP);
         this.stopModules();
     }
 
@@ -59,7 +58,7 @@ export class Soundscape {
             var scpModule = filtered[0];
             scpModule.soloed = true;
             scpModule.module.stop();
-            this.events.broadcast(Soundscape.SOLO_MODULE, scpModule);
+            this.emit(Soundscape.SOLO_MODULE, scpModule);
             return scpModule;
         }
         return false;
@@ -74,7 +73,7 @@ export class Soundscape {
             var scpModule = filtered[0];
             scpModule.soloed = false;
             scpModule.module.start();
-            this.events.broadcast(Soundscape.UNSOLO_MODULE, scpModule);
+            this.emit(Soundscape.UNSOLO_MODULE, scpModule);
             return scpModule;
         }
         return false;
@@ -88,7 +87,7 @@ export class Soundscape {
                 module: module
             };
             this.modules.push(entry);
-            this.events.broadcast(Soundscape.ADD_MODULE, entry);
+            this.emit(Soundscape.ADD_MODULE, entry);
             return entry;
         } else {
             throw(new Error('addModule module arument must be a SoundModule instance'));
@@ -104,7 +103,7 @@ export class Soundscape {
             }
         });
         if(module != null) {
-            this.events.broadcast(Soundscape.REMOVE_MODULE, module);
+            this.emit(Soundscape.REMOVE_MODULE, module);
         }
         return module;
     }
