@@ -4,8 +4,7 @@ import BaseControl from './base-control';
 export class FollowControl extends BaseControl {
     constructor (options={}) {
         super(options);
-        this.validEvents.push(FollowControl.START, FollowControl.STOP);
-        this.targetToken = null;
+        this.state = FollowControl.STOPPED;
     }
 
     validateTarget (controlTarget) {
@@ -20,20 +19,23 @@ export class FollowControl extends BaseControl {
         }
     }
 
+    onTargetChange(e) {
+        this.percent = e.percent;
+    }
+
     start () {
-        if (this.target != null) {
-            this.targetToken = this.target.on(FollowControl.VALUE_CHANGE, (e, data)=> {
-                this.percent = data.percent;
-            }, this);
-            this.events.broadcast(FollowControl.START);
+        if (this.target != null && this.state === FollowControl.STOPPED) {
+            this.target.on(FollowControl.VALUE_CHANGE, this.onTargetChange.bind(this));
+            this.state = FollowControl.ACTIVE;
+            this.emit(FollowControl.START);
         }
     }
 
     stop () {
-        if (this.targetToken != null) {
-            this.target.off(this.targetToken, FollowControl.VALUE_CHANGE);
-            this.targetToken = null;
-            this.events.broadcast(FollowControl.STOP);
+        if (this.state === FollowControl.ACTIVE) {
+            this.target.removeListener(FollowControl.VALUE_CHANGE, this.onTargetChange);
+            this.state = FollowControl.STOPPED;
+            this.emit(FollowControl.STOP);
         }
     }
 
@@ -51,5 +53,8 @@ export class FollowControl extends BaseControl {
 // Event String Constants
 FollowControl.START = 'follow_start';
 FollowControl.STOP  = 'follow_stop';
+// Control states
+FollowControl.ACTIVE  = 'follow:active';
+FollowControl.STOPPED = 'follow:stopped';
 
 export default FollowControl;

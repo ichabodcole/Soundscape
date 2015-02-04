@@ -1,51 +1,65 @@
 import utils from '../services/utils';
 import SoundModule from './sound-module';
+import OmniControl from '../property-controls/omni-control';
 
 var colorNoiseDefaults = {
-    title: "Noise Module",
-    type: 'noise-module',
+    type: 'color-noise-module',
     noiseType: 'brown'
 };
 
 class ColorNoiseModule extends SoundModule {
-    constructor (config, data) {
-        super(config, data);
-
-        this.model = utils.deepExtend({}, colorNoiseDefaults, this.model);
-
+    constructor (options) {
+        super(options);
         // Setup the sound generator
         this.generator = new NoiseGen(this.audioCtx);
         this.generator.connect(this.gainNode);
 
         // Set the sound generator specific properties
         this.generator.setNoiseType(this.model.noiseType);
+    }
 
-        // Start the generator
+    setDefaults() {
+        this.model = Object.assign({}, ColorNoiseModule.defaults);
+    }
+
+    start() {
+        super.start();
         this.generator.start();
     }
 
-    remove () {
-        super.remove();
+    stop() {
+        super.stop();
+        this.generator.stop();
+    }
+
+    destroy() {
+        super.destroy();
         this.generator.remove();
-        this.generator.disconnect();
-        this.gainNode.disconnect();
     }
 
     /*************************************
       *      Getters and Setters
     **************************************/
-
-    /*** noiseType ***/
     get noiseType () {
-        return this.model.noiseType;
+        return this.generator.noiseType;
     }
 
-    set noiseType (type) {
-        if(type !== void 0 && type !== null) {
-            this.model.noiseType = type;
-            this.generator.setNoiseType(this.model.noiseType);
-        }
+    set noiseType(type) {
+        this.generator.setNoiseType(type);
+    }
+
+    get state() {
+        var state = super.state;
+        state.noiseType = this.noiseType;
+        return state;
     }
 }
+
+ColorNoiseModule.defaults = Object.assign({}, SoundModule.defaults, colorNoiseDefaults);
+
+ColorNoiseModule.PINK_NOISE  = NoiseGen.PINK_NOISE;
+ColorNoiseModule.WHITE_NOISE = NoiseGen.WHITE_NOISE;
+ColorNoiseModule.BROWN_NOISE = NoiseGen.BROWN_NOISE;
+ColorNoiseModule.SILENCE     = NoiseGen.SILENCE;
 
 export default ColorNoiseModule;

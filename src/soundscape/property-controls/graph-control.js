@@ -11,11 +11,6 @@ export class GraphControl extends BaseControl {
         if (this.model.points != null) {
             this.sortPointsByTime();
         }
-
-        this.validEvents.push(
-            GraphControl.ADD_POINTS,
-            GraphControl.REMOVE_POINT
-        );
     }
 
     addPoints (pointsObj) {
@@ -31,7 +26,7 @@ export class GraphControl extends BaseControl {
             this.sortPointsByTime();
         }
 
-        this.events.broadcast(GraphControl.ADD_POINTS , this.points);
+        this.emit(GraphControl.ADD_POINTS , this.points);
         return this.points;
     }
 
@@ -40,7 +35,7 @@ export class GraphControl extends BaseControl {
             && pointIndex > 0
             && pointIndex < this.points.length - 1) {
             this.points.splice(pointIndex, 1);
-            this.events.broadcast(GraphControl.REMOVE_POINT, this.points);
+            this.emit(GraphControl.REMOVE_POINT, this.points);
             return this.points;
         }
     }

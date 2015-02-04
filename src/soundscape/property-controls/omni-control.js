@@ -23,8 +23,8 @@ class OmniControl extends BaseControl {
         return true;
     }
 
-    __onValueChange(e, data) {
-        this.value = data.value;
+    __onValueChange(e) {
+        this.value = e.value;
     }
 
     __setControlProperty(controlRef, propertyName, value) {
@@ -46,7 +46,7 @@ class OmniControl extends BaseControl {
         ];
 
         this.controlInstance;
-        this.controlToken;
+        this.controlListener;
         // Setup the controls container obj
         this.controls = {};
         this.controls[OmniControl.BASE_CONTROL]   = options.baseControl   || new BaseControl(options);
@@ -56,8 +56,6 @@ class OmniControl extends BaseControl {
         super(options);
         // Default to a range control if no control is specified in the model object
         this.controlType = options.controlType || OmniControl.BASE_CONTROL;
-        // Add OmniControl spefic events to the validEvents Array.
-        this.validEvents.push(OmniControl.CONTROL_TYPE_CHANGE);
     }
 
     // Setters and Getters
@@ -84,13 +82,14 @@ class OmniControl extends BaseControl {
             if (this.controlType !== controlType) {
                 // Stop listening to the previous control instance
                 if(this.controlInstance != null) {
-                    this.controlInstance.off(this.controlToken, OmniControl.VALUE_CHANGE);
+                    this.controlInstance.removeListener(OmniControl.VALUE_CHANGE, this.controlListener);
                 }
 
                 this.model.controlType = controlType;
-                this.events.broadcast(OmniControl.CONTROL_TYPE_CHANGE, controlType);
+                this.emit(OmniControl.CONTROL_TYPE_CHANGE, controlType);
                 this.controlInstance = this.controls[controlType];
-                this.controlToken = this.controlInstance.on(OmniControl.VALUE_CHANGE, this.__onValueChange.bind(this));
+                this.controlListener = this.__onValueChange.bind(this);
+                this.controlInstance.on(OmniControl.VALUE_CHANGE, this.controlListener);
             }
         } else {
             throw new Error(`OmniControl: controlType (${controlType}), is not a valid controlType`);

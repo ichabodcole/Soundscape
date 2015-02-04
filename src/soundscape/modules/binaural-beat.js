@@ -1,109 +1,106 @@
 import utils from '../services/utils';
 import SoundModule from './sound-module';
-// import MultiControlProperty from '../multi-control-property/multi-control-property';
+import OmniControl from '../property-controls/omni-control';
 
 var binauralBeatDefaults = {
-    title: 'Binaural Beat Module',
     type: 'binaural-beat-module',
-    // Binaural beat module specific settings
-    waveType: 'sine',
     pitch: {
-        propertyName: 'pitch',
-        controlType: 'slider_control',
-        value: 440,
-        sliderValue: 440,
-        followModuleId: null
+        min: 0,
+        max: 1200,
+        value: 440
     },
     beatRate: {
-        propertyName: 'beatRate',
-        controlType: 'slider_control',
-        value: 8,
-        sliderValue: 8,
-        followModuleId: null
-    }
+        min: 0,
+        max: 30,
+        value: 12
+    },
+    waveType: BinauralBeat.SINE
 };
 
 class BinauralBeatModule extends SoundModule {
-    constructor (config, data) {
-        var _self = this;
-        // Call the sound SoundModule constructor.
-        super(config, data);
-        this.model = utils.deepExtend({}, binauralBeatDefaults, this.model);
+    constructor (options) {
+        this.pitchEventToken = null;
+        this.beatRateEventToken = null;
 
-        // Set up the sound generator
+        super(options);
+        // Setup the sound generator
         this.generator = new BinauralBeat(this.audioCtx);
         this.generator.connect(this.gainNode);
+    }
 
+    setDefaults() {
+        this.model = Object.assign({}, BinauralBeatModule.defaults);
+    }
+
+    setControls() {
+        super.setControls();
         // Set the sound generator specific properties
-        this.waveType = this.model.waveType;
-
-        var propertyConfig = {
-            moduleId: this.id,
-        };
-
-        // Create property controls
-        // this.pitch    = new MultiControlProperty(propertyConfig, this.model.pitch);
-        // this.beatRate = new MultiControlProperty(propertyConfig, this.model.beatRate);
-
-        // this.events = Object.assign(this.events, {
-        //     pitchEvent: this.scpEvents.on('soundmodule', 'pitchChange', _self, _self.onPitchChange),
-        //     beatRateEvent: this.scpEvents.on('soundmodule', 'beatRateChange', _self, _self.onBeatRateChange)
-        // });
-
-        // Start the generator
-        this.generator.start();
+        this.pitch = new OmniControl(this.model.pitch);
+        this.beatRate = new OmniControl(this.model.beatRate);
     }
 
-    remove () {
-        super.remove();
-        this.generator.disconnect();
-        this.gainNode.disconnect();
-    }
-
+    // Event Handlers
     onPitchChange (e, data) {
-        console.log(e, 'beatRateChange');
+        this.generator.setPitch(data.value);
     }
 
     onBeatRateChange (e, data) {
-        console.log(e, 'beatRateChange');
+        this.generator.setBeatRate(data.value);
+    }
+
+    // Public API
+    start() {
+        super.start();
+        this.pitchEventToken    = this.pitch.on(OmniControl.VALUE_CHANGE, this.onPitchChange.bind(this));
+        this.beatRateEventToken = this.beatRate.on(OmniControl.VALUE_CHANGE, this.onBeatRateChange.bind(this));
+        this.generator.start();
+    }
+
+    stop() {
+        super.stop();
+        this.pitch.off(this.pitchEventToken);
+        this.beatRate.off(this.beatRateEventToken);
+        this.generator.stop();
+    }
+
+    destroy() {
+        super.destroy();
     }
 
     /*************************************
       *      Getters and Setters
     **************************************/
-
-    get waveType () {
-        return this.model.waveType;
+    /*** state ***/
+    get state() {
+        var state = super.state;
+        state.pitch = {
+            min: this.pitch.min,
+            max: this.pitch.max,
+            value: this.pitch.value
+        };
+        state.beatRate = {
+            min: this.beatRate.min,
+            max: this.beatRate.max,
+            value: this.beatRate.value
+        };
+        return state;
     }
 
-    set waveType (type) {
-        if(type !== void 0 && type !== null && typeof type === 'string') {
-            this.model.waveType = type;
-            this.generator.setWaveType(this.model.waveType);
-        }
+    /*** waveType ***/
+    get waveType() {
+        return this.generator.waveType;
     }
 
-    get pitch () {
-        return this.model.pitch;
-    }
-
-    set pitch (pitchObj) {
-        if(pitchObj !== void 0 && typeof pitchObj === 'object') {
-            Object.assign(this.model.pitch, pitchObj);
-            this.generator.setPitch(this.model.pitch.value);
-        }
-    }
-
-    get beatRate () {
-        return this.model.beatRate;
-    }
-
-    set beatRate (beatRateObj) {
-        if(beatRateObj !== void 0 && typeof beatRateObj === 'object') {
-            Object.assign(this.model.beatRate, beatRateObj);
-            this.generator.setBeatRate(this.model.beatRate.value);
-        }
+    set waveType(waveType) {
+        this.generator.setWaveType(waveType);
     }
 }
+
+BinauralBeatModule.defaults = Object.assign({}, SoundModule.defaults, binauralBeatDefaults);
+
+BinauralBeatModule.SINE     = BinauralBeat.SINE     = 'sine';
+BinauralBeatModule.SQUARE   = BinauralBeat.SQUARE   = 'square';
+BinauralBeatModule.SAWTOOTH = BinauralBeat.SAWTOOTH = 'sawtooth';
+BinauralBeatModule.TRIANGLE = BinauralBeat.TRIANGLE = 'triangle';
 
 export default BinauralBeatModule;

@@ -1,12 +1,10 @@
 import BaseControl from '../../../../src/soundscape/property-controls/base-control';
 
 describe ('BaseControl', function () {
-    var bc, options, events, listener, model, myTransform;
+    var bc, options, listener, model, myTransform;
 
     beforeEach(function () {
-        events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
         options = {
-            events: events,
             propertyName: 'baseProperty',
             value: 0.5
         };
@@ -121,7 +119,8 @@ describe ('BaseControl', function () {
                     expect(bc.value).toBe(175);
                 });
 
-                it ('should broadcast a VALUE_CHANGE message and a data object containing the current percent and value properties', function () {
+                it ('should emit a VALUE_CHANGE message and a data object containing the current percent and value properties', function () {
+                    spyOn(bc, 'emit');
                     bc.max = 200;
                     bc.min = 100;
                     bc.percent = 0.75;
@@ -130,7 +129,7 @@ describe ('BaseControl', function () {
                         value: 175
                     };
 
-                    expect(events.broadcast).toHaveBeenCalledWith(BaseControl.VALUE_CHANGE, data);
+                    expect(bc.emit).toHaveBeenCalledWith(BaseControl.VALUE_CHANGE, data);
                 });
             });
 
@@ -221,7 +220,8 @@ describe ('BaseControl', function () {
                     expect(bc.percent).toBe(0.25);
                 });
 
-                it ('should broadcast a VALUE_CHANGE message and a data object containing the current percent and value properties', function () {
+                it ('should emit a VALUE_CHANGE message and a data object containing the current percent and value properties', function () {
+                    spyOn(bc, 'emit')
                     bc.max = 200;
                     bc.min = 100;
                     bc.value = 175;
@@ -230,7 +230,7 @@ describe ('BaseControl', function () {
                         value: 175
                     };
 
-                    expect(events.broadcast).toHaveBeenCalledWith(BaseControl.VALUE_CHANGE, data);
+                    expect(bc.emit).toHaveBeenCalledWith(BaseControl.VALUE_CHANGE, data);
                 });
 
                 it ('should only set the model value if the passed value is a number', function () {
@@ -343,32 +343,14 @@ describe ('BaseControl', function () {
     describe ('methods', function () {
 
         describe ('on', function () {
-            beforeEach(function () {
-                events.on.and.returnValue('myTokenId01');
-            });
-
-            it ('should call the on method of the events obj', function () {
-                bc.on(BaseControl.VALUE_CHANGE, listener.update, listener);
-                expect(events.on).toHaveBeenCalledWith(BaseControl.VALUE_CHANGE, listener.update, listener);
-            });
-
-            it ('should throw an error if an invalid event type is passed in', function () {
-                expect(function ( ) {
-                    bc.on('invalidEvent', listener.update, listener);
-                }).toThrow(new Error ('Property Control: attempting to listen to invalid event: invalidEvent'));
-            });
-
-            it ('should return a token string', function () {
-                var token = bc.on(BaseControl.VALUE_CHANGE, listener.update, listener);
-                expect(typeof token).toEqual('string');
+            it('should be defined', function() {
+                expect(bc.on).toBeDefined();
             });
         });
 
-        describe ('off', function () {
-            it ('should call the off method of the events obj', function () {
-                var token = bc.on(BaseControl.VALUE_CHANGE, listener.update, listener);
-                bc.off(token, BaseControl.VALUE_CHANGE);
-                expect(events.off).toHaveBeenCalledWith(token, BaseControl.VALUE_CHANGE);
+        describe ('removeListener', function () {
+            it('should be defined', function() {
+                expect(bc.removeListener).toBeDefined();
             });
         });
 

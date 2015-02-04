@@ -1,121 +1,86 @@
 import utils from '../services/utils';
 import Events from '../services/events';
+import AudioProvider from '../services/audio-provider';
+import OmniControl from '../property-controls/omni-control';
 
 var soundModuleDefaults = {
-        muted  : false,
-        soloed : false,
-        enabled: true,
-        volume : {
-            propertyName: 'volume',
-            controlType: 'range_control',
-            followModuleId: null,
-            rangeValue: 0.5,
-            value: 0.5
-        }
-    };
+    type: 'sound-module',
+    muted  : false,
+    volume : {
+        min:0,
+        max:1,
+        value: 1,
+        controlType: OmniControl.BASE_CONTROL
+    }
+};
 
 class SoundModule {
-    constructor (config, data) {
-        this.audioCtx   = config.audioCtx;
-        this.masterGain = config.masterGain;
-        this.gainNode   = config.audioCtx.createGain();
-        this.pubSub     = config.pubSub;
+    constructor (options={}) {
+        this.volumeEventToken = null;
 
+        this.audioCtx   = options.audioCtx || AudioProvider.getContext();
+        this.gainNode   = this.audioCtx.createGain();
+        this.events     = options.events || new Events().setChannel('soundModule');
+
+        this.setDefaults();
+        this.setOptions(options);
+        this.setControls();
+    }
+
+    setDefaults () {
         // Setup default values.
-        this.model = Object.assign({}, soundModuleDefaults);
+        this.model = Object.assign({}, SoundModule.defaults);
+    }
 
-        // If the data attribute is set and is an object
+    setOptions (options) {
+        // If the options.model attribute is set and is an object
         // initialize this model with it.
-        if(data && utils.isObject(data)) {
-            utils.deepExtend(this.model, data);
+        if(options && utils.isObject(options)) {
+            utils.deepExtend(this.model, options);
         }
+    }
+
+    setControls () {
         // Create a volume property control
-        // this.volume = new MultiControlProperty({ moduleId: this.id }, this.model.volume);
-        // this.volume.addTransform(pitchTransform)
-        // Events
-        this.events = {
-            soloEvent: this.pubSub.on('soundscape', 'solo', this, this.onSoloUpdate),
-            // volumeEvent: this.pubSub.on(this.id, 'volumeUpdate', this, this.onVolumeUpdate)
-            // this.pitch.on(VALUE_UPDATE, (value) => {
-            //   this.generator.setPitch(pitchTransform(value))
-            // }, this);
-        };
+        this.volume = new OmniControl(this.model.volume);
     }
 
     // Event Handlers
-    onVolumeUpdate (e, data) {
-        if (this.enable === true && this.mute === false) {
-            this.gain = this.volume;
+    onVolumeChange (e, data) {
+        if (this.mute === false) {
+            this.gain = data.value;
         }
-    }
-
-    onSoloUpdate (e, data) {
-        if (data && !isNaN(data.soloCount)) {
-            this.soloCheck(data.soloCount);
-            return true;
-        }
-        return false;
     }
 
     // Public API
     start () {
-        this.gainNode.connect(this.masterGain);
+        this.volumeEventToken = this.volume.on(OmniControl.VALUE_CHANGE, this.onVolumeChange.bind(this));
     }
 
     stop () {
+        this.volume.off(this.volumeEventToken);
+    }
+
+    connect (gainNode) {
+        this.gainNode.connect(gainNode);
+    }
+
+    disconnect () {
         this.gainNode.disconnect();
     }
 
-    disable () {}
-
-    remove () {
-        this.solo = false;
-        this.pubSub.off(this.events.soloEvent, 'soundscape', 'solo');
-    }
-
-    soloCheck (soloCount) {
-        if(!this.model.soloed && soloCount !== 0) {
-            this.enable = false;
-        } else {
-            this.enable = true;
-        }
+    destroy () {
+        this.stop();
+        this.disconnect();
     }
 
     /*************************************
       *      Getters and Setters
     **************************************/
 
-    getPropertyAttribute(property, attribute) {
-        if(this.hasOwnProperty(property) && this[property].hasOwnProperty(attribute)) {
-            return this[property][attribute];
-        }
-    }
-
-    setPropertyAttribute(property, attribute, value) {
-        if(this.hasOwnProperty(property) && this[property].hasOwnProperty(attribute)) {
-            this[property][attribute] = value;
-        }
-    }
-
-    /*** id ***/
-    get id () {
-        return this.model.id;
-    }
-
     /*** type ***/
     get type () {
         return this.model.type;
-    }
-
-    /*** title ***/
-    get title () {
-        return this.model.title;
-    }
-
-    set title (title) {
-        if (title != null && typeof title === 'string') {
-            this.model.title = title;
-        }
     }
 
     /*** gain ***/
@@ -129,62 +94,32 @@ class SoundModule {
         }
     }
 
-    /*** solo ***/
-    get solo () {
-        return this.model.soloed;
-    }
-
-    set solo (soloBool) {
-        if(soloBool !== void 0 && typeof soloBool === 'boolean') {
-            this.model.soloed = soloBool;
-            this.pubSub.broadcast('soundmodule', 'solo', { solo: soloBool });
-        }
-    }
-
     /*** mute ***/
     get mute () {
         return this.model.muted;
     }
 
     set mute (muteBool) {
-        if(muteBool !== void 0 && typeof muteBool === 'boolean') {
-            this.model.muted = muteBool;
-            if(this.enable === true) {
-                if(this.model.muted === true) {
-                    this.gain = 0;
-                } else {
-                    this.gain = this.volume;
-                }
+        this.gain = (muteBool) ? 0 : this.volume.value;
+        this.model.muted = muteBool;
+    }
+
+    /*** state ***/
+    get state () {
+        var state = {
+            type: this.type,
+            muted: this.mute,
+            volume: {
+                min: this.volume.min,
+                max: this.volume.max,
+                value: this.volume.value,
+                controlType: this.volume.controlType
             }
-        }
-    }
-
-    /*** enable ***/
-    get enable () {
-            return this.model.enabled;
-    }
-
-    set enable (enableBool) {
-        if(enableBool !== void 0 && typeof enableBool === 'boolean') {
-            this.model.enabled = enableBool;
-            if (enableBool) {
-                if(this.mute === false) {
-                    this.gain = this.volume;
-                }
-            } else {
-                this.gain = 0;
-            }
-        }
-    }
-
-    /*** volume ***/
-    get volume () {
-        return this.model.volume.value;
-    }
-
-    get volumeControl () {
-        return true;
+        };
+        return state;
     }
 }
+
+SoundModule.defaults = soundModuleDefaults;
 
 export default SoundModule;

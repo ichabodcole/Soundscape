@@ -3,13 +3,10 @@ import GraphControl from '../../../../src/soundscape/property-controls/graph-con
 import { Interpolation } from '../../../../src/soundscape/common/math';
 
 describe ('GraphControl', function () {
-    var gc, events, timer, options, model, listener;
+    var gc, timer, options, model, listener;
 
     beforeEach(function () {
-        events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
-
         options =  {
-            events: events,
             propertyName: 'myGraphProperty',
             points: [
                 { type: 1, t: 0.25, v: 0.55 },
@@ -102,8 +99,9 @@ describe ('GraphControl', function () {
             });
 
             it ('should call the events broadcast method', function () {
+                spyOn(gc, 'emit');
                 gc.addPoints({});
-                expect(gc.events.broadcast).toHaveBeenCalledWith(GraphControl.ADD_POINTS, gc.points);
+                expect(gc.emit).toHaveBeenCalledWith(GraphControl.ADD_POINTS, gc.points);
             });
         });
 
@@ -129,8 +127,9 @@ describe ('GraphControl', function () {
             });
 
             it ('should call the events broadcast method', function () {
+                spyOn(gc, 'emit');
                 gc.removePoint(1);
-                expect(gc.events.broadcast).toHaveBeenCalledWith(GraphControl.REMOVE_POINT, gc.points);
+                expect(gc.emit).toHaveBeenCalledWith(GraphControl.REMOVE_POINT, gc.points);
             });
         });
 

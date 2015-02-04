@@ -4,34 +4,26 @@ export class Timer extends Ticker {
     constructor (options={}) {
         super(options);
 
-        this.validEvents = [
-            Timer.TICK,
-            Timer.START,
-            Timer.STOP,
-            Timer.PAUSE,
-            Timer.COMPLETE
-        ];
-
         this.timeAtPause = 0;
 
         this.model.state       = Timer.STOPPED;
         this.model.startTime   = null;
         this.model.currentTime = this.model.currentTime || null;
-        this.model.epsilon     = this.model.epsilon || null;
-        this.model.playTime    = this.model.playTime || null;
+        this.model.progress    = this.model.progress || null;
+        this.model.duration    = this.model.duration || null;
     }
 
     start () {
         if (this.state !== Timer.TICKING) {
-            if (this.playTime > 0 && this.playTime != null) {
+            if (this.duration > 0 && this.duration != null) {
                 this.state = Timer.TICKING;
                 this.createInterval();
-                this.events.broadcast(Timer.START);
+                this.emit(Timer.START);
                 this.startTime = Date.now();
                 // reset the pause time variables
                 this.timeAtPause = 0;
             } else {
-                throw new Error('Timer: valid playTime must be set before calling start');
+                throw new Error('Timer: valid duration must be set before calling start');
             }
         }
     }
@@ -41,7 +33,7 @@ export class Timer extends Ticker {
             this.state = Timer.PAUSED;
             this.timeAtPause = this.currentTime;
             this.destroyInterval();
-            this.events.broadcast(Timer.PAUSE);
+            this.emit(Timer.PAUSE);
         } else if (this.state === Timer.PAUSED) {
             this.start();
         }
@@ -50,7 +42,7 @@ export class Timer extends Ticker {
     stop () {
         this.state = Timer.STOPPED;
         this.destroyInterval();
-        this.events.broadcast(Timer.STOP);
+        this.emit(Timer.STOP);
         this.timeAtPause = 0;
     }
 
@@ -60,30 +52,30 @@ export class Timer extends Ticker {
         var currentTime = (now - this.startTime);
 
         // Stop the Timer and broadcast the COMPLETE event type
-        // if currentTime is equal to or greater than playTime.
-        if(currentTime >= this.playTime) {
+        // if currentTime is equal to or greater than duration.
+        if(currentTime >= this.duration) {
             this.stop();
 
             data = {
-                playTime: this.playTime,
-                currentTime: this.playTime,
-                epsilon: 1
+                duration: this.duration,
+                currentTime: this.duration,
+                progress: 1
             };
 
-            this.events.broadcast(Timer.TICK, data);
-            this.events.broadcast(Timer.COMPLETE);
+            this.emit(Timer.TICK, data);
+            this.emit(Timer.COMPLETE);
 
         } else {
             this.currentTime = currentTime;
-            this.epsilon = (1 / this.playTime) * this.currentTime;
+            this.progress = (1 / this.duration) * this.currentTime;
 
             data = {
-                playTime: this.playTime,
+                duration: this.duration,
                 currentTime: this.currentTime,
-                epsilon: this.epsilon
+                progress: this.progress
             };
 
-            this.events.broadcast(Timer.TICK, data);
+            this.emit(Timer.TICK, data);
         }
     }
 
@@ -103,24 +95,24 @@ export class Timer extends Ticker {
         return this.model.startTime;
     }
 
-    set playTime (milliseconds) {
+    set duration (milliseconds) {
         if (milliseconds > 0) {
-            this.model.playTime = milliseconds;
+            this.model.duration = milliseconds;
         } else {
-            throw new Error(`Timer: playTime (${milliseconds}) must be greater than 0`);
+            throw new Error(`Timer: duration (${milliseconds}) must be greater than 0`);
         }
     }
 
-    get playTime () {
-        return this.model.playTime;
+    get duration () {
+        return this.model.duration;
     }
 
     set currentTime (milliseconds) {
         if (milliseconds >= 0) {
-            if (milliseconds <= this.playTime) {
+            if (milliseconds <= this.duration) {
                 this.model.currentTime = milliseconds;
             } else {
-                throw(new Error(`Timer: currentTime (${milliseconds}) cannot be greater than playTime (${this.playTime})`));
+                throw(new Error(`Timer: currentTime (${milliseconds}) cannot be greater than duration (${this.duration})`));
             }
         } else {
             throw(new Error(`Timer: currentTime (${milliseconds}) cannot be less than 0`));
@@ -131,16 +123,16 @@ export class Timer extends Ticker {
         return this.model.currentTime;
     }
 
-    set epsilon (epsilon) {
-        if (epsilon >= 0 && epsilon <= 1) {
-            this.model.epsilon = epsilon;
+    set progress (progress) {
+        if (progress >= 0 && progress <= 1) {
+            this.model.progress = progress;
         } else {
-            throw new Error(`Timer: epsilon value (${epsilon}) must be between 0 and 1`);
+            throw new Error(`Timer: progress value (${progress}) must be between 0 and 1`);
         }
     }
 
-    get epsilon () {
-        return this.model.epsilon;
+    get progress () {
+        return this.model.progress;
     }
 }
 // Timer event types
