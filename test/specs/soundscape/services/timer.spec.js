@@ -2,17 +2,14 @@ import Timer from '../../../../src/soundscape/services/timer';
 import Utils from '../../../../src/soundscape/services/utils';
 
 describe ('Timer', function() {
-    var tm, events, options, model, update;
+    var tm, options, model, update;
 
     beforeEach(function() {
-        events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
-        events.on.and.returnValue('someToken');
         update = function ( ) {
             return true;
         };
 
         options = {
-            events: events,
             interval: 50,
             model: {}
         };
@@ -45,7 +42,7 @@ describe ('Timer', function() {
 
             describe ('after calling timer.pause', function() {
                 it ('should return Timer.PAUSED', function() {
-                    tm.playTime = 100;
+                    tm.duration = 100;
                     tm.start();
                     tm.pause();
                     expect(tm.state).toBe(Timer.PAUSED);
@@ -54,7 +51,7 @@ describe ('Timer', function() {
 
             describe ('after calling timer.start', function() {
                 it ('should return Timer.TICKING', function() {
-                    tm.playTime = 100;
+                    tm.duration = 100;
                     tm.start();
                     expect(tm.state).toBe(Timer.TICKING);
                 });
@@ -75,7 +72,7 @@ describe ('Timer', function() {
             it ('should update the setInterval interval period', function() {
                 spyOn(tm, 'tick');
                 jasmine.clock().install();
-                tm.playTime = 1000;
+                tm.duration = 1000;
                 tm.start();
                 jasmine.clock().tick(100);
                 tm.interval = 100;
@@ -103,25 +100,25 @@ describe ('Timer', function() {
             });
         });
 
-        describe ('playTime', function() {
+        describe ('duration', function() {
             it ('should be null if not set', function() {
-                expect(tm.playTime).toBe(null);
+                expect(tm.duration).toBe(null);
             });
 
-            it ('should set the models playTime value', function() {
-                tm.playTime = 2000;
-                expect(tm.model.playTime).toEqual(2000);
+            it ('should set the models duration value', function() {
+                tm.duration = 2000;
+                expect(tm.model.duration).toEqual(2000);
             });
 
-            it ('should get the Timer models playTime value', function() {
-                tm.playTime = 2500;
-                expect(tm.playTime).toEqual(2500);
+            it ('should get the Timer models duration value', function() {
+                tm.duration = 2500;
+                expect(tm.duration).toEqual(2500);
             });
 
             it ('should only accept positive values', function() {
                 expect(function() {
-                    tm.playTime = -100;
-                }).toThrow(new Error('Timer: playTime (-100) must be greater than 0'));
+                    tm.duration = -100;
+                }).toThrow(new Error('Timer: duration (-100) must be greater than 0'));
             });
         });
 
@@ -131,55 +128,55 @@ describe ('Timer', function() {
             });
 
             it ('should set the models currentTime value', function() {
-                tm.playTime = 2000;
+                tm.duration = 2000;
                 tm.currentTime = 1500;
                 expect(tm.model.currentTime).toEqual(1500);
             });
 
             it ('should get the models currentTime value', function() {
-                tm.playTime = 2000;
+                tm.duration = 2000;
                 tm.currentTime = 2000;
                 expect(tm.currentTime).toEqual(2000);
             });
 
-            it ('should only allow values less than or equal to the current playTime', function() {
-                tm.playTime = 250;
+            it ('should only allow values less than or equal to the current duration', function() {
+                tm.duration = 250;
                 expect(function() {
                     tm.currentTime = 300;
-                }).toThrow(new Error('Timer: currentTime (300) cannot be greater than playTime (250)'));
+                }).toThrow(new Error('Timer: currentTime (300) cannot be greater than duration (250)'));
             });
 
             it ('should only accept positive numbers', function() {
-                tm.playTime = 2000;
+                tm.duration = 2000;
                 expect(function() {
                     tm.currentTime = -150;
                 }).toThrow(new Error('Timer: currentTime (-150) cannot be less than 0'));
             });
         });
 
-        describe ('epsilon', function() {
+        describe ('progress', function() {
             it ('should be null before the timer has started', function() {
-                expect(tm.epsilon).toBe(null);
+                expect(tm.progress).toBe(null);
             });
 
-            it ('should set the timer models epsilon value', function() {
-                tm.epsilon = 0.5;
-                expect(tm.model.epsilon).toEqual(0.5);
+            it ('should set the timer models progress value', function() {
+                tm.progress = 0.5;
+                expect(tm.model.progress).toEqual(0.5);
             });
 
             it ('should only accept values between 0 and 1', function() {
                 expect(function() {
-                    tm.epsilon = 1.2;
-                }).toThrow(new Error('Timer: epsilon value (1.2) must be between 0 and 1'));
+                    tm.progress = 1.2;
+                }).toThrow(new Error('Timer: progress value (1.2) must be between 0 and 1'));
 
                 expect(function() {
-                    tm.epsilon = -0.3;
-                }).toThrow(new Error('Timer: epsilon value (-0.3) must be between 0 and 1'));
+                    tm.progress = -0.3;
+                }).toThrow(new Error('Timer: progress value (-0.3) must be between 0 and 1'));
             });
 
             it ('should return a value between 0 and 1 that represents the percent complete', function() {
-                tm.epsilon = 0.5;
-                expect(tm.epsilon).toEqual(0.5);
+                tm.progress = 0.5;
+                expect(tm.progress).toEqual(0.5);
             });
         });
     });
@@ -188,7 +185,7 @@ describe ('Timer', function() {
 
         beforeEach(function () {
             jasmine.clock().install();
-            tm.playTime = 100;
+            tm.duration = 100;
         });
 
         afterEach(function () {
@@ -215,7 +212,7 @@ describe ('Timer', function() {
 
             it ('should not reset the startTime if the timer is TICKING or PAUSED', function() {
                 jasmine.clock().mockDate();
-                tm.playTime = 1000;
+                tm.duration = 1000;
                 tm.start();
                 jasmine.clock().tick(300);
                 var firstStart = tm.currentTime;
@@ -223,11 +220,11 @@ describe ('Timer', function() {
                 expect(tm.currentTime).toBe(300);
             });
 
-            it ('should throw and error if playTime is not set to a valid value', function() {
+            it ('should throw and error if duration is not set to a valid value', function() {
                 var tm = new Timer(options);
                 expect(function() {
                     tm.start();
-                }).toThrow(new Error('Timer: valid playTime must be set before calling start'));
+                }).toThrow(new Error('Timer: valid duration must be set before calling start'));
             });
 
             it ('should set the models startTime variable to the current dateTime', function() {
@@ -256,9 +253,10 @@ describe ('Timer', function() {
                 expect(tm.tick).not.toHaveBeenCalled();
             });
 
-            it ('should broadcast the STOP event', function () {
+            it ('should emit the STOP event', function () {
+                spyOn(tm, 'emit');
                 tm.stop();
-                expect(events.broadcast).toHaveBeenCalledWith(Timer.STOP);
+                expect(tm.emit).toHaveBeenCalledWith(Timer.STOP);
             });
         });
 
@@ -285,9 +283,9 @@ describe ('Timer', function() {
                 expect(tm.state).toBe(Timer.TICKING);
             });
 
-            it ('should maintain the currentTime and epsilon after calling start again', function() {
+            it ('should maintain the currentTime and progress after calling start again', function() {
                 jasmine.clock().mockDate();
-                tm.playTime = 1000;
+                tm.duration = 1000;
 
                 tm.start();
                 jasmine.clock().tick(100);
@@ -311,45 +309,48 @@ describe ('Timer', function() {
             });
 
             it ('should broadcast the PAUSE event', function () {
+                spyOn(tm, 'emit');
                 tm.start();
                 tm.pause();
 
-                expect(events.broadcast).toHaveBeenCalledWith(Timer.PAUSE);
+                expect(tm.emit).toHaveBeenCalledWith(Timer.PAUSE);
             });
         });
 
-        // the tick event should provide the current playTime and epsilon.
+        // the tick event should provide the current duration and progress.
         describe ('tick', function() {
             it ('should broadcast the Timer.TICK event with a data object', function() {
                 var tickEventData;
+                spyOn(tm, 'emit');
 
-                tm.playTime = 100;
+                tm.duration = 100;
                 tm.startTime = Date.now();
                 tm.tick();
 
                 tickEventData = {
-                    playTime: tm.playTime,
+                    duration: tm.duration,
                     currentTime: tm.currentTime,
-                    epsilon: tm.epsilon
+                    progress: tm.progress
                 };
 
-                expect(events.broadcast).toHaveBeenCalledWith(Timer.TICK, tickEventData);
+                expect(tm.emit).toHaveBeenCalledWith(Timer.TICK, tickEventData);
             });
 
-            it ('should broadcast the Timer.COMPLETE event when the currentTime is equal or greater than the playTime', function() {
+            it ('should broadcast the Timer.COMPLETE event when the currentTime is equal or greater than the duration', function() {
+                spyOn(tm, 'emit');
                 jasmine.clock().mockDate();
-                tm.playTime = 500;
+                tm.duration = 500;
                 tm.start();
                 jasmine.clock().tick(510);
                 tm.tick();
 
-                expect(events.broadcast).toHaveBeenCalledWith(Timer.COMPLETE);
+                expect(tm.emit).toHaveBeenCalledWith(Timer.COMPLETE);
             });
 
-            it ('should call timer.stop when the currentTime is equal or greater than the playTime', function() {
+            it ('should call timer.stop when the currentTime is equal or greater than the duration', function() {
                 spyOn(tm, 'stop');
                 jasmine.clock().mockDate();
-                tm.playTime = 500;
+                tm.duration = 500;
                 tm.start();
                 jasmine.clock().tick(500);
                 tm.tick();
@@ -362,33 +363,11 @@ describe ('Timer', function() {
             it ('should be defined', function ( ) {
                 expect(tm.on).toBeDefined();
             });
-
-            it ('should call the events obj on method', function () {
-                tm.on(Timer.TICK, update, null);
-                expect(events.on).toHaveBeenCalledWith(Timer.TICK, jasmine.any(Function), jasmine.any(Object));
-            });
-
-            it ('should return a token string', function () {
-                var token = tm.on(Timer.TICK, function () {});
-                expect(typeof token).toBe('string');
-            });
-
-            it ('should throw an error if trying to listen to an unknown event', function () {
-                expect(function () {
-                    tm.on('bacon', function () {});
-                }).toThrow(new Error('Unknown event type: bacon'));
-            });
         });
 
-        describe ('off', function () {
+        describe ('removeListener', function () {
             it ('should be defined', function () {
-                expect(tm.off).toBeDefined();
-            });
-
-            it ('should call the events obj off method', function () {
-                var token = tm.on(Timer.TICK, function() {});
-                tm.off(token, Timer.TICK);
-                expect(events.off).toHaveBeenCalledWith(token, Timer.TICK);
+                expect(tm.removeListener).toBeDefined();
             });
         });
     });

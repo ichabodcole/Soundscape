@@ -1,23 +1,11 @@
-import SoundModule from '../../../../src/soundscape/modules/sound-module';
+import ColorNoiseModule from '../../../../src/soundscape/modules/color-noise';
 import OmniControl from '../../../../src/soundscape/property-controls/omni-control';
 
-describe ('SoundModule', function () {
+describe ('ColorNoiseModule', function() {
     var sm, options;
 
-    beforeEach (function () {
+    beforeEach(function() {
         options = {
-            // type: 'sound-module',
-            audioCtx: {
-                createGain: function () {
-                    return {
-                        gain: {
-                            value: 1
-                        },
-                        connect: function(node) { return true },
-                        disconnect: function() {}
-                    };
-                }
-            },
             events: jasmine.createSpyObj('events', ['broadcast', 'on', 'off']),
             volume: {
                 min: 0,
@@ -26,26 +14,22 @@ describe ('SoundModule', function () {
             }
         };
 
-        sm = new SoundModule(options);
+        sm = new ColorNoiseModule();
         sm.start();
     });
 
-    it ('should be defined', function () {
-        expect(SoundModule).toBeDefined();
-    });
-
-    describe ('constructor', function () {
+    describe ('constructor', function() {
         it ('should not throw an error', function () {
             expect(function () {
-                new SoundModule(options);
+                new ColorNoiseModule(options);
             }).not.toThrow();
         });
 
         it ('should set up default values if provided', function () {
             options.volume.value = 0.5;
-            sm = new SoundModule(options);
+            sm = new ColorNoiseModule(options);
+            expect(sm.type).toBe('color-noise-module');
             expect(sm.volume.value).toBe(0.5);
-            expect(sm.type).toBe('sound-module');
         });
     });
 
@@ -53,7 +37,7 @@ describe ('SoundModule', function () {
 
         describe ('type', function () {
             it ('should return a type string', function () {
-                expect(sm.type).toEqual('sound-module');
+                expect(sm.type).toEqual('color-noise-module');
             });
         });
 
@@ -111,18 +95,35 @@ describe ('SoundModule', function () {
             });
         });
 
+        describe ('noiseType', function () {
+            it ('should be defined', function() {
+                expect(sm.noiseType).toBeDefined();
+            });
+
+            it ('should return the generators noise type', function() {
+                sm.generator.setNoiseType(ColorNoiseModule.PINK_NOISE);
+                expect(sm.noiseType).toBe(ColorNoiseModule.PINK_NOISE);
+            });
+
+            it ('should set the generators noise type', function() {
+                sm.noiseType = ColorNoiseModule.WHITE;
+                expect(sm.generator.noiseType).toBe(ColorNoiseModule.WHITE);
+            });
+        });
+
         describe ('state', function() {
             it ('should return an object describing the modules current state', function() {
-                var sm = new SoundModule(options);
+                var sm = new ColorNoiseModule();
                 var expectedState = {
-                    type: 'sound-module',
+                    type: 'color-noise-module',
                     muted: false,
                     volume: {
                         min: 0,
                         max: 1,
                         value: 0.5,
                         controlType: OmniControl.BASE_CONTROL
-                    }
+                    },
+                    noiseType: ColorNoiseModule.BROWN_NOISE
                 };
                 expect(sm.state).toEqual(expectedState);
             });
@@ -137,6 +138,12 @@ describe ('SoundModule', function () {
                 sm.start();
                 expect(sm.volume.on).toHaveBeenCalled();
             });
+
+            it('should call the generators start method', function() {
+                spyOn(sm.generator, 'start');
+                sm.start();
+                expect(sm.generator.start).toHaveBeenCalled();
+            });
         });
 
         describe ('stop', function() {
@@ -145,6 +152,13 @@ describe ('SoundModule', function () {
                 sm.stop();
                 expect(sm.volume.off).toHaveBeenCalled();
             });
+
+            it('should call the generators stop method', function() {
+                spyOn(sm.generator, 'stop');
+                sm.stop();
+                expect(sm.generator.stop).toHaveBeenCalled();
+            });
+
         });
 
         describe ('connect', function () {
@@ -178,6 +192,12 @@ describe ('SoundModule', function () {
                 spyOn(sm, 'disconnect');
                 sm.destroy();
                 expect(sm.disconnect).toHaveBeenCalled();
+            });
+
+            it ('should call the generators remove method', function () {
+                spyOn(sm.generator, 'remove');
+                sm.destroy();
+                expect(sm.generator.remove).toHaveBeenCalled();
             });
         });
     });

@@ -1,19 +1,16 @@
 import Ticker from '../../../../src/soundscape/services/ticker';
 
 describe ('Ticker', function () {
-    var tk, events, config, update;
+    var tk, options, update;
 
     beforeEach(function () {
-        events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
-        events.on.and.returnValue('someToken');
         update = function ( ) {
             return true;
         };
-        config = {
-            events: events,
+        options = {
             interval: 50
         }
-        tk = new Ticker(config);
+        tk = new Ticker(options);
     });
 
     describe ('constructor', function () {
@@ -110,9 +107,10 @@ describe ('Ticker', function () {
                 expect(tk.state).toBe(Ticker.TICKING);
             });
 
-            it ('should broadcast the START event', function () {
+            it ('should emit the START event', function () {
+                spyOn(tk, 'emit');
                 tk.start();
-                expect(events.broadcast).toHaveBeenCalledWith(Ticker.START);
+                expect(tk.emit).toHaveBeenCalledWith(Ticker.START);
             });
 
             it ('should call the tick method every (n)milliseconds based on the interval', function ( ) {
@@ -142,16 +140,18 @@ describe ('Ticker', function () {
                 expect(tk.tick).not.toHaveBeenCalled();
             });
 
-            it ('should broadcast the STOP event', function () {
+            it ('should emit the STOP event', function () {
+                spyOn(tk, 'emit');
                 tk.stop();
-                expect(events.broadcast).toHaveBeenCalledWith(Ticker.STOP);
+                expect(tk.emit).toHaveBeenCalledWith(Ticker.STOP);
             });
         });
 
         describe ('tick', function () {
             it ('should broadcast the TICK event', function () {
+                spyOn(tk, 'emit');
                 tk.tick();
-                expect(events.broadcast).toHaveBeenCalledWith(Ticker.TICK);
+                expect(tk.emit).toHaveBeenCalledWith(Ticker.TICK);
             });
         });
 
@@ -159,33 +159,11 @@ describe ('Ticker', function () {
             it ('should be defined', function ( ) {
                 expect(tk.on).toBeDefined();
             });
-
-            it ('should call the events obj on method', function () {
-                tk.on(Ticker.TICK, update, null);
-                expect(events.on).toHaveBeenCalledWith(Ticker.TICK, jasmine.any(Function), jasmine.any(Object));
-            });
-
-            it ('should return a token string', function () {
-                var token = tk.on(Ticker.TICK, function () {});
-                expect(typeof token).toBe('string');
-            });
-
-            it ('should throw an error if trying to listen to an unknown event', function () {
-                expect(function () {
-                    tk.on('bacon', function () {});
-                }).toThrow(new Error('Unknown event type: bacon'));
-            });
         });
 
-        describe ('off', function () {
+        describe ('removeListener', function () {
             it ('should be defined', function () {
-                expect(tk.off).toBeDefined();
-            });
-
-            it ('should call the events obj off method', function () {
-                var token = tk.on(Ticker.TICK, function() {});
-                tk.off(token, Ticker.TICK);
-                expect(events.off).toHaveBeenCalledWith(token, Ticker.TICK);
+                expect(tk.removeListener).toBeDefined();
             });
         });
     });

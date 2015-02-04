@@ -1,6 +1,6 @@
-import Events from '../services/events';
+var EventEmitter = require('events').EventEmitter;
 
-class BaseControl {
+class BaseControl extends EventEmitter {
 
     // Private Methods
     __getValueFromPercent (percent) {
@@ -42,7 +42,6 @@ class BaseControl {
     // Constructor init code
     constructor (options={}) {
         this.controlName = options.controlName || 'Property Control';
-        this.events = options.events || new Events().setChannel('property-control');
         this.transforms = options.transforms || [];
 
         // Set default model values.
@@ -51,23 +50,9 @@ class BaseControl {
         this.max = (options.max != null) ? options.max : 1;
         this.value = (options.value != null) ? options.value : this.min;
         this.useTransforms = (options.useTransforms != null) ? options.useTransforms : true;
-
-        this.validEvents = [ BaseControl.VALUE_CHANGE ];
     }
 
     // Public methods
-    on (eventName, func, context=null) {
-        if (this.validEvents.indexOf(eventName) !== -1) {
-            return this.events.on(eventName, func, context);
-        } else {
-            this.__handleError(`attempting to listen to invalid event: ${eventName}`);
-        }
-    }
-
-    off (token, eventName) {
-        this.events.off(token, eventName);
-    }
-
     setRange (min, max) {
         this.max = max;
         this.min = min;
@@ -157,7 +142,7 @@ class BaseControl {
                         value: this.value
                     };
 
-                    this.events.broadcast(BaseControl.VALUE_CHANGE, data);
+                    this.emit(BaseControl.VALUE_CHANGE, data);
                 } else {
                     this.__handleError(`cannot set value property (${value}) higher than max property (${this.max})`);
                 }

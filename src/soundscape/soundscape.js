@@ -1,248 +1,178 @@
 import utils from './services/utils';
+import SoundModule from './modules/sound-module';
 import SoundModuleFactory from './modules/module-factory';
-import AudioContextProvider from './services/audio-context-provider';
+import AudioProvider from './services/audio-provider';
+import Timer from './services/timer';
+
 import Events from './services/events';
 
-var STOPPED = 'stopped',
-    PLAYING = 'playing',
-    PAUSED  = 'paused';
 
+var soundscapeDefaults = {};
 /**
 * @description
 * Create a new Soundscape instance
 *
-* @param config object - contains dependencies necessary for soundscape to function.
+* @param options object - contains dependencies necessary for soundscape to function.
 * @returns Soundscape
 */
 export class Soundscape {
-    constructor (config) {
-        // Setup variables using config object.
-        this.audioCtx           = config.audioContext;
-        this.moduleFactory      = config.moduleFactory;
-        this.events             = config.events;
-        this.utils              = config.utils;
-        this.gain               = config.audioContext.createGain();
+    constructor (options={}) {
+        // Setup variables using options object.
+        this.audioCtx   = options.audioCtx || AudioProvider.getContext();
+        this.timer      = options.timer || new Timer();
+        this.events     = options.events || new Events().setChannel('soundscape');
+        this.__duration = options.duration || utils.mins2Mils(5);
+        this.__modules  = [];
+        this.state      = Soundscape.STOPPED;
 
-        this.state              = STOPPED;
-        this.model              = {};
-        this.model.soundModules = [];
-
-        this.gain.connect(this.audioCtx.destination);
-        this.events.on('soundmodule', 'solo', this, this.soloUpdate);
+        this.timer.playTime = this.duration;
+        // this.timer.on(Timer.COMPLETE, onTimerComplete);
     }
 
-    soloUpdate (e) {
-        this.events.broadcast('soundscape', 'solo', { soloCount: this.soloCount });
+    //*** Public Methods ***//
+    play() {
+        this.state = Soundscape.PLAYING;
+        this.timer.start();
+        this.events.broadcast(Soundscape.PLAY);
+        this.startModules();
     }
 
-    play () {
-        this.state = PLAYING;
-        if (this.hasSoundModules()) {
-            this.soundModules.forEach(function (module) {
-                module.start();
-            });
+    pause() {
+        this.state = Soundscape.PAUSED;
+        this.timer.pause();
+        this.events.broadcast(Soundscape.PAUSE);
+        this.stopModules();
+    }
+
+    stop() {
+        this.state = Soundscape.STOPPED;
+        this.timer.stop();
+        this.events.broadcast(Soundscape.STOP);
+        this.stopModules();
+    }
+
+    soloModule(moduleId) {
+        var filtered = this.modules.filter( (scpModule) => {
+            return scpModule.id === moduleId;
+        });
+        if(filtered.length > 0) {
+            var scpModule = filtered[0];
+            scpModule.soloed = true;
+            scpModule.module.stop();
+            this.events.broadcast(Soundscape.SOLO_MODULE, scpModule);
+            return scpModule;
         }
-        return this;
+        return false;
     }
 
-    pause () {
-        this.state = PAUSED;
-        if (this.hasSoundModules()) {
-            this.soundModules.forEach(function (module) {
-                module.stop();
-            });
+    unsoloModule(moduleId) {
+        var filtered = this.modules.filter( (scpModule) => {
+            return scpModule.id === moduleId;
+        });
+
+        if(filtered.length > 0) {
+            var scpModule = filtered[0];
+            scpModule.soloed = false;
+            scpModule.module.start();
+            this.events.broadcast(Soundscape.UNSOLO_MODULE, scpModule);
+            return scpModule;
         }
-        return this;
+        return false;
     }
 
-    stop () {
-        this.state = STOPPED;
-        if (this.hasSoundModules()) {
-            this.soundModules.forEach(function (module) {
-                module.stop();
-            });
+    addModule(module) {
+        if(module instanceof SoundModule) {
+            var entry = {
+                id: utils.uuid(),
+                soloed: false,
+                module: module
+            };
+            this.modules.push(entry);
+            this.events.broadcast(Soundscape.ADD_MODULE, entry);
+            return entry;
+        } else {
+            throw(new Error('addModule module arument must be a SoundModule instance'));
         }
-        return this;
     }
 
-    addSoundModule (moduleData, updateSolo=true) {
-        var soundModule, mConfig;
-
-        if( !moduleData.hasOwnProperty('type')) {
-            return false;
-        }
-
-        // Module Config
-        mConfig = {
-            audioCtx: this.audioCtx,
-            masterGain: this.gain
-        };
-
-        soundModule = this.moduleFactory.create(mConfig, moduleData);
-
-        if (this.utils.isObject(soundModule)) {
-            this.soundModules.push(soundModule);
-
-            if (this.state === PLAYING) {
-                soundModule.start();
-            }
-
-            if (this.soloCount > 0 && updateSolo) {
-                this.soloUpdate();
-            }
-        }
-
-        return soundModule;
-    }
-
-    removeSoundModule (moduleId) {
-        this.soundModules.forEach(removeModule);
-
-        function removeModule (module, index, array) {
-            if (module.id === moduleId) {
-                module.remove();
-                module = null;
+    removeModule(moduleId) {
+        var module;
+        this.modules.forEach((element, index, array)=> {
+            if (element.id === moduleId) {
+                module = element;
                 array.splice(index, 1);
             }
+        });
+        if(module != null) {
+            this.events.broadcast(Soundscape.REMOVE_MODULE, module);
         }
-
-        return moduleId;
+        return module;
     }
 
-    removeAllSoundModules () {
-        if(this.soundModules.length < 1) {
-            return false;
-        }
-
-        this.soundModules.forEach(removeModule);
-        this.soundModules = [];
-
-        function removeModule (module) {
-            module.remove();
-        }
-    }
-
-    reset () {
-        this.stop();
-        this.removeAllSoundModules();
-        this.model = {};
-        this.model.soundModules = [];
-    }
-
-    parseJson (json) {
-        if (json instanceof Object) {
-            this.reset();
-
-            if (json.soundModules) {
-                var soundModules = json.soundModules;
-
-                soundModules.forEach(function (module, index) {
-                    this.addSoundModule(module, false);
-                }, this);
+    getModuleById(moduleId) {
+        var filtered = this.modules.filter((element) => {
+            if(element.id === moduleId) {
+                return element;
             }
+        });
+        return(filtered.length > 0)? filtered[0] : void 0;
+    }
 
-            // Create the local model
-            this.model = Object.assign({}, json, this.model);
-
-            if (this.soloCount > 0) {
-                this.soloUpdate();
-            }
-
-            return this.model;
+    // Helper functions
+    startModules() {
+        if(this.modules.length > 0) {
+            this.modules.forEach( (scpModule) => {
+                scpModule.module.start();
+            });
         }
     }
 
-    hasSoundModules () {
-        return Array.isArray(this.soundModules) && this.soundModules.length > 0;
-    }
-
-    /*************************************
-      *      Getters and Setters
-    **************************************/
-
-    getSoundModuleById (moduleId) {
-        return this.getSoundModuleByProperty('id', moduleId);
-    }
-
-    getSoundModulesByProperty (propertyName, propertyValue) {
-        return this.soundModules.filter(propertyMatch)[0];
-
-        function propertyMatch(element) {
-            return element[propertyName] === propertyValue;
+    stopModules() {
+        if(this.modules.length > 0) {
+            this.modules.forEach( (scpModule) => {
+                scpModule.module.stop();
+            });
         }
     }
 
-    get volume () {
-        return this.gain.gain.value;
+    //*** Getters and Setters ***/
+    get soloedModules() {
+        var soloed = this.modules.filter( (scpModule)=> {
+            return scpModule.soloed === true;
+        });
+        return soloed;
     }
 
-    set volume (volume) {
-        if (typeof volume !== 'number') {
-            this.gain.gain.value = volume;
-        } else {
-            throw 'Soundscape: volume must be a number';
-        }
+    get duration() {
+        return this.__duration;
     }
 
-    get soundModuleIds () {
-        return this.soundModules.map(captureIds);
-
-        function captureIds (module) {
-            return module.id;
-        }
+    set duration(duration) {
+        this.__duration = duration;
     }
 
-    get soundModules () {
-        return this.model.soundModules;
+    get modules() {
+        return this.__modules;
     }
 
-    set soundModules (soundModules) {
-        if (Array.isArray(soundModules)) {
-            this.model.soundModules = soundModules;
-        }
-    }
-
-    get playTime () {
-        return this.model.playTime;
-    }
-
-    set playTime (time) {
-        if (typeof time === 'number') {
-            this.model.playTime = time;
-        }
-    }
-
-    get soloCount () {
-        return this.soundModules.filter(checkSoloCount).length;
-
-        function checkSoloCount (soundModule, index, array) {
-            return soundModule.solo === true;
-        }
+    set modules(modules) {
+        this.__modules = modules;
     }
 }
 
-Soundscape.PLAYING = 'playing';
-Soundscape.STOPPED = 'stopped';
-Soundscape.PAUSED  = 'paused';
-
-export var SoundscapeProvider = {
-    get: function () {
-        var config;
-
-        // Create a new audio context if none is supplied.
-        if(audioContext == null) {
-            audioContext = AudioContextProvider.get();
-        }
-
-        config = {
-            utils: utils,
-            events: new Events(),
-            moduleFactory: SoundModuleFactory,
-            audioContext: audioContext
-        };
-
-        return new Soundscape(config);
-    }
-};
+Soundscape.defaults = soundscapeDefaults;
+// Event Strings Constants
+Soundscape.PLAY          = 'soundscape:play';
+Soundscape.PAUSE         = 'soundscape:pause';
+Soundscape.STOP          = 'soundscape:stop';
+Soundscape.SOLO_MODULE   = 'soundscape:solo-module';
+Soundscape.UNSOLO_MODULE = 'soundscape:unsolo-module';
+Soundscape.ADD_MODULE    = 'soundscape:add-module';
+Soundscape.REMOVE_MODULE = 'soundscape:remove-module';
+Soundscape.COMPLETE      = 'soundscape:complete';
+// State String Constants
+Soundscape.PLAYING = 'soundscape:playing';
+Soundscape.STOPPED = 'soundscape:stopped';
+Soundscape.PAUSED  = 'soundscape:paused';
 
 export default Soundscape;

@@ -2,13 +2,10 @@ import BaseControl from '../../../../src/soundscape/property-controls/base-contr
 import FollowControl from '../../../../src/soundscape/property-controls/follow-control';
 
 describe ('FollowControl', function () {
-    var fc, events, options, model, listener, noop;
+    var fc, options, model, listener, noop;
     noop = function() { return true; };
 
     beforeEach(function () {
-        events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
-        events.on.and.returnValue('myTokenId01');
-
         options = {
             //events: events,
             controlName: 'FollowControl',
@@ -105,11 +102,7 @@ describe ('FollowControl', function () {
         var bc;
 
         beforeEach(function () {
-            var bcEvents = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
-            bcEvents.on.and.returnValue('myTokenId02');
-
             var bcoptions = {
-                events: bcEvents,
                 controlName: 'FollowControl',
                 model: model
             };
@@ -126,7 +119,7 @@ describe ('FollowControl', function () {
                 spyOn(bc, 'on');
                 fc.target = bc;
                 fc.start();
-                expect(fc.target.on).toHaveBeenCalledWith(FollowControl.VALUE_CHANGE, jasmine.any(Function), jasmine.any(Object));
+                expect(fc.target.on).toHaveBeenCalledWith(FollowControl.VALUE_CHANGE, jasmine.any(Function));
             });
 
             it ('should not do anything if a target is has not been set when called', function () {
@@ -136,17 +129,11 @@ describe ('FollowControl', function () {
                 expect(fc.target.on).not.toHaveBeenCalled();
             });
 
-            it ('should store a token', function () {
+            it ('should call the events emit method with the START event', function () {
+                spyOn(fc, 'emit');
                 fc.target = bc;
                 fc.start();
-                expect(typeof fc.targetToken).toEqual('string');
-            });
-
-            it ('should call the events broadcast method with the START event', function () {
-                spyOn(fc.events, 'broadcast');
-                fc.target = bc;
-                fc.start();
-                expect(fc.events.broadcast).toHaveBeenCalledWith(FollowControl.START);
+                expect(fc.emit).toHaveBeenCalledWith(FollowControl.START);
             });
         });
 
@@ -155,61 +142,33 @@ describe ('FollowControl', function () {
                 expect(fc.stop).toBeDefined();
             });
 
-            it ('should call the off method of the control being followed', function () {
-                spyOn(bc, 'off');
+            it ('should call the removeListener method of the control being followed', function () {
+                spyOn(bc, 'removeListener');
                 fc.target = bc;
                 fc.start();
                 fc.stop();
-                expect(fc.target.off).toHaveBeenCalledWith('myTokenId02', FollowControl.VALUE_CHANGE);
+                expect(fc.target.removeListener).toHaveBeenCalledWith(FollowControl.VALUE_CHANGE, jasmine.any(Function));
             });
 
             it ('should do nothing if a targetToken has not been set', function () {
-                spyOn(bc, 'off');
+                spyOn(bc, 'removeListener');
                 fc.target = bc;
                 fc.stop();
-                expect(fc.target.off).not.toHaveBeenCalled();
+                expect(fc.target.removeListener).not.toHaveBeenCalled();
             });
 
-            it ('should set the tokenTarget to null', function () {
+            it ('should call the events emit method with the STOP event', function () {
+                spyOn(fc, 'emit');
                 fc.target = bc;
                 fc.start();
                 fc.stop();
-                expect(fc.targetToken).toBe(null);
-            });
-
-
-            it ('should call the events broadcast method with the STOP event', function () {
-                spyOn(fc.events, 'broadcast');
-                fc.target = bc;
-                fc.start();
-                fc.stop();
-                expect(fc.events.broadcast).toHaveBeenCalledWith(FollowControl.STOP);
+                expect(fc.emit).toHaveBeenCalledWith(FollowControl.STOP);
             });
         });
 
         describe ('on', function() {
-            describe('passing in a START event', function() {
-                it('should not throw an error', function() {
-                    expect(function() {
-                        fc.on(FollowControl.START, function(){});
-                    }).not.toThrow();
-                });
-            })
-
-            describe('passing in a STOP event', function() {
-                it('should not throw an error', function() {
-                    expect(function() {
-                        fc.on(FollowControl.STOP, function(){});
-                    }).not.toThrow();
-                });
-            });
-
-            describe('passing in a VALUE_CHANGE event', function() {
-                it('should not throw an error', function() {
-                    expect(function() {
-                        fc.on(FollowControl.VALUE_CHANGE, function(){});
-                    }).not.toThrow();
-                });
+            it('should be defined', function() {
+                expect(fc.on).toBeDefined();
             });
         });
 

@@ -1,17 +1,23 @@
 
 
 //Controls Examples;
-import baseControlExample from './scripts/controls/base-control-example';
-baseControlExample();
+//import baseControlExample from './scripts/controls/base-control-example';
+// baseControlExample();
 
-import followControlExample from './scripts/controls/follow-control-example';
-followControlExample();
+//import followControlExample from './scripts/controls/follow-control-example';
+// followControlExample();
 
 // import graphControlExample from './scripts/controls/graph-control-example';
 // graphControlExample();
 
-import omniControlExample from './scripts/controls/omni-control-example';
-omniControlExample();
+//import omniControlExample from './scripts/controls/omni-control-example';
+//omniControlExample();
+
+import colorNoiseExample from './scripts/modules/color-noise-example';
+//colorNoiseExample();
+
+import binauralBeatExample from './scripts/modules/binaural-beat-example';
+binauralBeatExample();
 
 // import SoundModule from '../../soundscape/modules/sound-module';
 // var scp = SoundscapeFactory.create();

@@ -1,15 +1,9 @@
-import Events from './events';
+var EventEmitter = require('events').EventEmitter;
 
-export class Ticker {
+export class Ticker extends EventEmitter {
     constructor(options={}) {
         // Allow option to override events object if desired.
-        this.events      = options.events || new Events().setChannel('ticker');
-        this.model       = Object.assign({}, options.model || {});
-        this.validEvents = [
-            Ticker.TICK,
-            Ticker.START,
-            Ticker.STOP
-        ];
+        this.model = Object.assign({}, options.model || {});
         // Initialize Model
         this.tickInterval = null;
         this.interval = options.interval || 50;
@@ -19,17 +13,17 @@ export class Ticker {
     start () {
         this.state = Ticker.TICKING;
         this.createInterval();
-        this.events.broadcast(Ticker.START);
+        this.emit(Ticker.START);
     }
 
     stop () {
         this.state = Ticker.STOPPED;
         this.destroyInterval();
-        this.events.broadcast(Ticker.STOP);
+        this.emit(Ticker.STOP);
     }
 
     tick () {
-        this.events.broadcast(Ticker.TICK);
+        this.emit(Ticker.TICK);
     }
 
     createInterval () {
@@ -42,19 +36,6 @@ export class Ticker {
             clearInterval(this.tickInterval);
             this.tickInterval = null;
         }
-    }
-
-    on (eventName, fn, context=null) {
-        if (this.validEvents.indexOf(eventName) !== -1) {
-            var token = this.events.on(eventName, fn, context);
-            return token;
-        } else {
-            throw new Error('Unknown event type: ' + eventName );
-        }
-    }
-
-    off (token, eventName) {
-        this.events.off(token, eventName);
     }
 
     set interval(milliseconds) {

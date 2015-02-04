@@ -4,7 +4,7 @@ import OmniControl from '../../../../src/soundscape/property-controls/omni-contr
 //import GraphControl from '../../../../src/soundscape/property-controls/graph-control';
 
 describe ('OmniControl', function () {
-    var omniCtrl, options, events;
+    var omniCtrl, options;
 
     it ('should be defined', function () {
         expect(OmniControl).toBeDefined();
@@ -12,9 +12,6 @@ describe ('OmniControl', function () {
 
     beforeEach(function () {
         //var baseControl = jasmine.createSpyObj('baseControl', ['on', 'off'])
-
-        events = jasmine.createSpyObj('events', ['on', 'off', 'broadcast']);
-        events.on.and.returnValue('someToken');
         options = {
             controlName: 'OmniControl',
             propertyName: 'volume',
@@ -29,7 +26,6 @@ describe ('OmniControl', function () {
     describe('contructor', function() {
         it('should not throw', function() {
             var options = {
-                events:events,
                 min: 100,
                 max: 400
             };
@@ -81,16 +77,16 @@ describe ('OmniControl', function () {
                     }).toThrow(new Error('OmniControl: controlType (chunkyBacon), is not a valid controlType'));
                 });
 
-                it('should broadcast the CONTROL_TYPE_CHANGE event', function() {
-                    spyOn(omniCtrl.events, 'broadcast');
+                it('should emit the CONTROL_TYPE_CHANGE event', function() {
+                    spyOn(omniCtrl, 'emit');
                     omniCtrl.controlType = OmniControl.FOLLOW_CONTROL;
-                    expect(omniCtrl.events.broadcast).toHaveBeenCalledWith(OmniControl.CONTROL_TYPE_CHANGE, OmniControl.FOLLOW_CONTROL);
+                    expect(omniCtrl.emit).toHaveBeenCalledWith(OmniControl.CONTROL_TYPE_CHANGE, OmniControl.FOLLOW_CONTROL);
                 });
 
                 it('should not broadcast the CONTROL_TYPE_CHANGE if set to the same type of control', function() {
-                    events.broadcast.calls.reset();
+                    spyOn(omniCtrl, 'emit');
                     omniCtrl.controlType = OmniControl.BASE_CONTROL;
-                    expect(events.broadcast.calls.count()).toBe(0);
+                    expect(omniCtrl.emit.calls.count()).toBe(0);
                 });
 
                 describe('setting a base control', function() {
@@ -169,8 +165,8 @@ describe ('OmniControl', function () {
 
         describe('controlInstance', function() {
             beforeEach(function() {
-                options.baseControl = jasmine.createSpyObj('baseControl', ['on', 'off', 'broadcast']);
-                options.followControl = jasmine.createSpyObj('followControl', ['on', 'off', 'broadcast']);
+                options.baseControl = jasmine.createSpyObj('baseControl', ['on', 'removeListener', 'emit']);
+                options.followControl = jasmine.createSpyObj('followControl', ['on', 'removeListener', 'emit']);
                 omniCtrl = new OmniControl(options);
             });
 

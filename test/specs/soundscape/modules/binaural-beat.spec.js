@@ -1,23 +1,23 @@
-import SoundModule from '../../../../src/soundscape/modules/sound-module';
+import BinauralBeatModule from '../../../../src/soundscape/modules/binaural-beat';
 import OmniControl from '../../../../src/soundscape/property-controls/omni-control';
 
-describe ('SoundModule', function () {
+describe ('BinauralBeatModule', function () {
     var sm, options;
 
     beforeEach (function () {
         options = {
             // type: 'sound-module',
-            audioCtx: {
-                createGain: function () {
-                    return {
-                        gain: {
-                            value: 1
-                        },
-                        connect: function(node) { return true },
-                        disconnect: function() {}
-                    };
-                }
-            },
+            // audioCtx: {
+            //     createGain: function () {
+            //         return {
+            //             gain: {
+            //                 value: 1
+            //             },
+            //             connect: function(node) { return true },
+            //             disconnect: function() {}
+            //         };
+            //     }
+            // },
             events: jasmine.createSpyObj('events', ['broadcast', 'on', 'off']),
             volume: {
                 min: 0,
@@ -26,26 +26,26 @@ describe ('SoundModule', function () {
             }
         };
 
-        sm = new SoundModule(options);
+        sm = new BinauralBeatModule(options);
         sm.start();
     });
 
     it ('should be defined', function () {
-        expect(SoundModule).toBeDefined();
+        expect(BinauralBeatModule).toBeDefined();
     });
 
     describe ('constructor', function () {
         it ('should not throw an error', function () {
             expect(function () {
-                new SoundModule(options);
+                new BinauralBeatModule(options);
             }).not.toThrow();
         });
 
         it ('should set up default values if provided', function () {
             options.volume.value = 0.5;
-            sm = new SoundModule(options);
+            sm = new BinauralBeatModule(options);
             expect(sm.volume.value).toBe(0.5);
-            expect(sm.type).toBe('sound-module');
+            expect(sm.type).toBe('binaural-beat-module');
         });
     });
 
@@ -53,7 +53,7 @@ describe ('SoundModule', function () {
 
         describe ('type', function () {
             it ('should return a type string', function () {
-                expect(sm.type).toEqual('sound-module');
+                expect(sm.type).toEqual('binaural-beat-module');
             });
         });
 
@@ -94,6 +94,52 @@ describe ('SoundModule', function () {
             });
         });
 
+        describe ('state', function() {
+            it ('should return an object describing the modules current state', function() {
+                var sm = new BinauralBeatModule(options);
+                var expectedState = {
+                    type: 'binaural-beat-module',
+                    muted: false,
+                    volume: {
+                        min: 0,
+                        max: 1,
+                        value: 0.5,
+                        controlType: OmniControl.BASE_CONTROL
+                    },
+                    pitch: {
+                        min: 0,
+                        max: 1200,
+                        value: 440
+                    },
+                    beatRate: {
+                        min: 0,
+                        max: 30,
+                        value: 12
+                    }
+                };
+                expect(sm.state).toEqual(expectedState);
+            });
+        });
+
+        describe ('waveType', function () {
+
+            it ('should be defined', function() {
+                expect(sm.waveType).toBeDefined();
+            });
+
+            it ('should return the generators waveType', function() {
+                expect(sm.waveType).toBe(sm.generator.waveType);
+            });
+
+            it ('should set the generators waverType', function() {
+                sm.waveType = BinauralBeatModule.SQUARE;
+                expect(sm.generator.waveType).toBe(BinauralBeatModule.SQUARE);
+            });
+        });
+    });
+
+    describe ('property controls', function() {
+
         describe ('volume', function () {
             it ('should be defined', function () {
                 expect(sm.volume).toBeDefined();
@@ -111,20 +157,35 @@ describe ('SoundModule', function () {
             });
         });
 
-        describe ('state', function() {
-            it ('should return an object describing the modules current state', function() {
-                var sm = new SoundModule(options);
-                var expectedState = {
-                    type: 'sound-module',
-                    muted: false,
-                    volume: {
-                        min: 0,
-                        max: 1,
-                        value: 0.5,
-                        controlType: OmniControl.BASE_CONTROL
-                    }
-                };
-                expect(sm.state).toEqual(expectedState);
+        describe ('pitch', function() {
+
+            it ('should be defined', function() {
+                expect(sm.pitch).toBeDefined();
+            });
+
+            it ('should be an OmniControl instance', function() {
+                expect(sm.pitch instanceof OmniControl).toBe(true);
+            });
+
+            it ('should update the generators pitch value', function() {
+                sm.pitch.value = 550;
+                expect(sm.generator.pitch).toBe(550);
+            });
+        });
+
+        describe ('beatRate', function() {
+
+            it ('should be defined', function() {
+                expect(sm.beatRate).toBeDefined();
+            });
+
+            it ('should be an OmniControl instance', function() {
+                expect(sm.beatRate instanceof OmniControl).toBe(true);
+            });
+
+            it ('should update the generators beatRate value', function() {
+                sm.beatRate.value = 7;
+                expect(sm.generator.beatRate).toBe(7);
             });
         });
     });
@@ -137,6 +198,18 @@ describe ('SoundModule', function () {
                 sm.start();
                 expect(sm.volume.on).toHaveBeenCalled();
             });
+
+            it ('should call the pitch controls on method', function() {
+                spyOn(sm.pitch, 'on');
+                sm.start();
+                expect(sm.pitch.on).toHaveBeenCalled();
+            });
+
+            it ('should call the beatRate controls on method', function() {
+                spyOn(sm.beatRate, 'on');
+                sm.start();
+                expect(sm.beatRate.on).toHaveBeenCalled();
+            });
         });
 
         describe ('stop', function() {
@@ -144,6 +217,18 @@ describe ('SoundModule', function () {
                 spyOn(sm.volume, 'off');
                 sm.stop();
                 expect(sm.volume.off).toHaveBeenCalled();
+            });
+
+            it ('should call the pitch controls off method', function() {
+                spyOn(sm.pitch, 'off');
+                sm.stop();
+                expect(sm.pitch.off).toHaveBeenCalled();
+            });
+
+            it ('should call the beatRate controls off method', function() {
+                spyOn(sm.beatRate, 'off');
+                sm.stop();
+                expect(sm.beatRate.off).toHaveBeenCalled();
             });
         });
 
