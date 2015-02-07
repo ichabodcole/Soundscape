@@ -1,5 +1,11 @@
 // Import dependencies
-import BaseControl from './base-control';
+import { BaseControl, BaseControlEvent } from './base-control';
+
+// Event String Constants
+export var FollowControlEvent = Object.assign({
+    START: 'follow_start',
+    STOP: 'follow_stop'
+}, BaseControlEvent);
 
 export class FollowControl extends BaseControl {
     constructor (options={}) {
@@ -25,17 +31,17 @@ export class FollowControl extends BaseControl {
 
     start () {
         if (this.target != null && this.state === FollowControl.STOPPED) {
-            this.target.on(FollowControl.VALUE_CHANGE, this.onTargetChange.bind(this));
+            this.target.on(FollowControlEvent.VALUE_CHANGE, this.onTargetChange.bind(this));
             this.state = FollowControl.ACTIVE;
-            this.emit(FollowControl.START);
+            this.emit(FollowControlEvent.START);
         }
     }
 
     stop () {
         if (this.state === FollowControl.ACTIVE) {
-            this.target.removeListener(FollowControl.VALUE_CHANGE, this.onTargetChange);
+            this.target.removeListener(FollowControlEvent.VALUE_CHANGE, this.onTargetChange);
             this.state = FollowControl.STOPPED;
-            this.emit(FollowControl.STOP);
+            this.emit(FollowControlEvent.STOP);
         }
     }
 
@@ -50,9 +56,6 @@ export class FollowControl extends BaseControl {
     }
 }
 
-// Event String Constants
-FollowControl.START = 'follow_start';
-FollowControl.STOP  = 'follow_stop';
 // Control states
 FollowControl.ACTIVE  = 'follow:active';
 FollowControl.STOPPED = 'follow:stopped';

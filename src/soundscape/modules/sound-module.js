@@ -1,6 +1,6 @@
 import utils from '../services/utils';
 import AudioProvider from '../services/audio-provider';
-import OmniControl from '../property-controls/omni-control';
+import { OmniControl, OmniControlEvent } from '../property-controls/omni-control';
 
 var EventEmitter = require('events').EventEmitter;
 
@@ -15,7 +15,15 @@ var soundModuleDefaults = {
     }
 };
 
-class SoundModule extends EventEmitter {
+export var SoundModuleEvent = {
+    START: 'soundmodule:start',
+    STOP: 'soundmodule:stop',
+    DESTROY: 'soundmodule:destroy',
+    CONNECT: 'soundmodule:connect',
+    DISCONNECT: 'soundmodule:disconnect'
+};
+
+export class SoundModule extends EventEmitter {
     // Private Methods
     __onVolumeChange (e) {
         if (this.mute === false) {
@@ -24,6 +32,7 @@ class SoundModule extends EventEmitter {
     }
 
     constructor (options={}) {
+        this.state = SoundModule.STOPPED;
         this.volumeListener = null;
 
         this.audioCtx   = options.audioCtx || AudioProvider.getContext();
@@ -55,27 +64,48 @@ class SoundModule extends EventEmitter {
     // Public API
     start () {
         this.volumeListener = this.__onVolumeChange.bind(this);
-        this.volume.on(OmniControl.VALUE_CHANGE, this.volumeListener);
+        this.volume.on(OmniControlEvent.VALUE_CHANGE, this.volumeListener);
+        this.state = SoundModule.ACTIVE;
+        this.emit(SoundModuleEvent.START);
     }
 
     stop () {
         if(this.volumeListener != null) {
             this.volume.removeListener(OmniControl.VALUE_CHANGE, this.volumeListener);
             this.volumeListener = null;
+            this.state = SoundModule.STOPPED;
+            this.emit(SoundModuleEvent.STOP);
         }
     }
 
     connect (gainNode) {
         this.gainNode.connect(gainNode);
+        this.emit(SoundModuleEvent.CONNECT);
     }
 
     disconnect () {
         this.gainNode.disconnect();
+        this.emit(SoundModuleEvent.DISCONNECT);
     }
 
     destroy () {
         this.stop();
         this.disconnect();
+        this.emit(SoundModuleEvent.DESTROY);
+    }
+
+    serialize () {
+        var state = {
+            type: this.type,
+            muted: this.mute,
+            volume: {
+                min: this.volume.min,
+                max: this.volume.max,
+                value: this.volume.value,
+                controlType: this.volume.controlType
+            }
+        };
+        return state;
     }
 
     /*************************************
@@ -107,22 +137,10 @@ class SoundModule extends EventEmitter {
         this.gain = (muteBool) ? 0 : this.volume.value;
         this.model.muted = muteBool;
     }
-
-    /*** state ***/
-    get state () {
-        var state = {
-            type: this.type,
-            muted: this.mute,
-            volume: {
-                min: this.volume.min,
-                max: this.volume.max,
-                value: this.volume.value,
-                controlType: this.volume.controlType
-            }
-        };
-        return state;
-    }
 }
+
+SoundModule.STOPPED = 'soundmodule:stopped';
+SoundModule.ACTIVE  = 'soundmodule:active';
 
 SoundModule.defaults = soundModuleDefaults;
 

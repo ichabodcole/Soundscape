@@ -1,4 +1,5 @@
-import Timer from '../../../../src/soundscape/services/timer';
+
+import { Timer, TimerEvent } from '../../../../src/soundscape/services/timer';
 import Utils from '../../../../src/soundscape/services/utils';
 
 describe ('Timer', function() {
@@ -256,7 +257,7 @@ describe ('Timer', function() {
             it ('should emit the STOP event', function () {
                 spyOn(tm, 'emit');
                 tm.stop();
-                expect(tm.emit).toHaveBeenCalledWith(Timer.STOP);
+                expect(tm.emit).toHaveBeenCalledWith(TimerEvent.STOP);
             });
         });
 
@@ -313,7 +314,7 @@ describe ('Timer', function() {
                 tm.start();
                 tm.pause();
 
-                expect(tm.emit).toHaveBeenCalledWith(Timer.PAUSE);
+                expect(tm.emit).toHaveBeenCalledWith(TimerEvent.PAUSE);
             });
         });
 
@@ -333,7 +334,7 @@ describe ('Timer', function() {
                     progress: tm.progress
                 };
 
-                expect(tm.emit).toHaveBeenCalledWith(Timer.TICK, tickEventData);
+                expect(tm.emit).toHaveBeenCalledWith(TimerEvent.TICK, tickEventData);
             });
 
             it ('should broadcast the Timer.COMPLETE event when the currentTime is equal or greater than the duration', function() {
@@ -344,7 +345,7 @@ describe ('Timer', function() {
                 jasmine.clock().tick(510);
                 tm.tick();
 
-                expect(tm.emit).toHaveBeenCalledWith(Timer.COMPLETE);
+                expect(tm.emit).toHaveBeenCalledWith(TimerEvent.COMPLETE);
             });
 
             it ('should call timer.stop when the currentTime is equal or greater than the duration', function() {

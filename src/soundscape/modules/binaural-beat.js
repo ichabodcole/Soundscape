@@ -1,6 +1,6 @@
 import utils from '../services/utils';
-import SoundModule from './sound-module';
-import OmniControl from '../property-controls/omni-control';
+import { SoundModule, SoundModuleEvent } from './sound-module';
+import { OmniControl, OmniControlEvent } from '../property-controls/omni-control';
 
 var binauralBeatDefaults = {
     type: 'binaural-beat-module',
@@ -17,7 +17,9 @@ var binauralBeatDefaults = {
     waveType: BinauralBeat.SINE
 };
 
-class BinauralBeatModule extends SoundModule {
+export var BinauralBeatModuleEvent = Object.assign({}, SoundModuleEvent);
+
+export class BinauralBeatModule extends SoundModule {
     // Private Methods
     __onPitchChange (e) {
         this.generator.setPitch(e.value);
@@ -51,18 +53,18 @@ class BinauralBeatModule extends SoundModule {
     // Public API
     start() {
         super.start();
-        this.pitchListener = this.__onPitchChange.bind(this)
+        this.pitchListener = this.__onPitchChange.bind(this);
         this.beatRateListener = this.__onBeatRateChange.bind(this);
 
-        this.pitch.on(OmniControl.VALUE_CHANGE, this.pitchListener);
-        this.beatRate.on(OmniControl.VALUE_CHANGE, this.beatRateListener);
+        this.pitch.on(OmniControlEvent.VALUE_CHANGE, this.pitchListener);
+        this.beatRate.on(OmniControlEvent.VALUE_CHANGE, this.beatRateListener);
         this.generator.start();
     }
 
     stop() {
         super.stop();
-        this.pitch.removeListener(OmniControl.VALUE_CHANGE, this.pitchListener);
-        this.beatRate.removeListener(OmniControl.VALUE_CHANGE, this.beatRateListener);
+        this.pitch.removeListener(OmniControlEvent.VALUE_CHANGE, this.pitchListener);
+        this.beatRate.removeListener(OmniControlEvent.VALUE_CHANGE, this.beatRateListener);
         this.generator.stop();
     }
 
@@ -70,24 +72,25 @@ class BinauralBeatModule extends SoundModule {
         super.destroy();
     }
 
-    /*************************************
-      *      Getters and Setters
-    **************************************/
     /*** state ***/
-    get state() {
-        var state = super.state;
-        state.pitch = {
+    serialize() {
+        var data = super.serialize();
+        data.pitch = {
             min: this.pitch.min,
             max: this.pitch.max,
             value: this.pitch.value
         };
-        state.beatRate = {
+        data.beatRate = {
             min: this.beatRate.min,
             max: this.beatRate.max,
             value: this.beatRate.value
         };
-        return state;
+        return data;
     }
+
+    /*************************************
+      *      Getters and Setters
+    **************************************/
 
     /*** waveType ***/
     get waveType() {

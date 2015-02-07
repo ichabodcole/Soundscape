@@ -1,5 +1,12 @@
 var EventEmitter = require('events').EventEmitter;
 
+// Ticker event types
+export var TickerEvent = {
+    TICK: 'ticker:tick',
+    START: 'ticker:start',
+    STOP: 'ticker:stop'
+};
+
 export class Ticker extends EventEmitter {
     constructor(options={}) {
         // Allow option to override events object if desired.
@@ -13,17 +20,17 @@ export class Ticker extends EventEmitter {
     start () {
         this.state = Ticker.TICKING;
         this.createInterval();
-        this.emit(Ticker.START);
+        this.emit(TickerEvent.START);
     }
 
     stop () {
         this.state = Ticker.STOPPED;
         this.destroyInterval();
-        this.emit(Ticker.STOP);
+        this.emit(TickerEvent.STOP);
     }
 
     tick () {
-        this.emit(Ticker.TICK);
+        this.emit(TickerEvent.TICK);
     }
 
     createInterval () {
@@ -57,10 +64,6 @@ export class Ticker extends EventEmitter {
         return this.model.state;
     }
 }
-// Ticker event types
-Ticker.TICK  = 'tick';
-Ticker.START = 'start';
-Ticker.STOP  = 'stop';
 // Ticker states
 Ticker.STOPPED = 'stopped';
 Ticker.TICKING = 'ticking';

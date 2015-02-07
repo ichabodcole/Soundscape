@@ -1,4 +1,4 @@
-import ColorNoiseModule from '../../../../src/soundscape/modules/color-noise';
+import { ColorNoiseModule, ColorNoiseModuleEvent } from '../../../../src/soundscape/modules/color-noise';
 import OmniControl from '../../../../src/soundscape/property-controls/omni-control';
 
 describe ('ColorNoiseModule', function() {
@@ -109,24 +109,6 @@ describe ('ColorNoiseModule', function() {
                 expect(sm.generator.noiseType).toBe(ColorNoiseModule.WHITE);
             });
         });
-
-        describe ('state', function() {
-            it ('should return an object describing the modules current state', function() {
-                var sm = new ColorNoiseModule();
-                var expectedState = {
-                    type: 'color-noise-module',
-                    muted: false,
-                    volume: {
-                        min: 0,
-                        max: 1,
-                        value: 0.5,
-                        controlType: OmniControl.BASE_CONTROL
-                    },
-                    noiseType: ColorNoiseModule.BROWN_NOISE
-                };
-                expect(sm.state).toEqual(expectedState);
-            });
-        });
     });
 
     describe ('methods', function () {
@@ -143,6 +125,12 @@ describe ('ColorNoiseModule', function() {
                 sm.start();
                 expect(sm.generator.start).toHaveBeenCalled();
             });
+
+            it('should set the state property to ACTIVE', function() {
+                sm.start();
+                expect(sm.state).not.toBe(undefined);
+                expect(sm.state).toBe(ColorNoiseModule.ACTIVE);
+            });
         });
 
         describe ('stop', function() {
@@ -158,6 +146,11 @@ describe ('ColorNoiseModule', function() {
                 expect(sm.generator.stop).toHaveBeenCalled();
             });
 
+            it('should set the state property to STOPPED', function() {
+                sm.stop();
+                expect(sm.state).not.toBe(undefined);
+                expect(sm.state).toBe(ColorNoiseModule.STOPPED);
+            });
         });
 
         describe ('connect', function () {
@@ -166,6 +159,16 @@ describe ('ColorNoiseModule', function() {
                 sm.connect({});
                 expect(sm.gainNode.connect).toHaveBeenCalled();
             });
+
+            it('should emit a CONNECT event', function() {
+                /**
+                * TODO: consider mocking the audioCtx for testing.
+                */
+                var gainNode = sm.audioCtx.createGain();
+                spyOn(sm,'emit');
+                sm.connect(gainNode);
+                expect(sm.emit).toHaveBeenCalledWith(ColorNoiseModuleEvent.CONNECT);
+            });
         });
 
         describe ('disconnect', function() {
@@ -173,6 +176,12 @@ describe ('ColorNoiseModule', function() {
                 spyOn(sm.gainNode, 'disconnect');
                 sm.disconnect();
                 expect(sm.gainNode.disconnect).toHaveBeenCalled();
+            });
+
+            it('should emit a DISCONNECT event', function() {
+                spyOn(sm,'emit');
+                sm.disconnect();
+                expect(sm.emit).toHaveBeenCalledWith(ColorNoiseModuleEvent.DISCONNECT);
             });
         });
 
@@ -193,10 +202,28 @@ describe ('ColorNoiseModule', function() {
                 expect(sm.disconnect).toHaveBeenCalled();
             });
 
-            it ('should call the generators remove method', function () {
-                spyOn(sm.generator, 'remove');
+            it('should emit a DESTROY event', function() {
+                spyOn(sm,'emit');
                 sm.destroy();
-                expect(sm.generator.remove).toHaveBeenCalled();
+                expect(sm.emit).toHaveBeenCalledWith(ColorNoiseModuleEvent.DESTROY);
+            });
+        });
+
+        describe ('serialize', function() {
+            it ('should return an object describing the modules current state', function() {
+                var sm = new ColorNoiseModule();
+                var expectedState = {
+                    type: 'color-noise-module',
+                    muted: false,
+                    volume: {
+                        min: 0,
+                        max: 1,
+                        value: 0.5,
+                        controlType: OmniControl.BASE_CONTROL
+                    },
+                    noiseType: ColorNoiseModule.BROWN_NOISE
+                };
+                expect(sm.serialize()).toEqual(expectedState);
             });
         });
     });

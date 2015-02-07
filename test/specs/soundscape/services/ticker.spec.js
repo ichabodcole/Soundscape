@@ -1,4 +1,5 @@
-import Ticker from '../../../../src/soundscape/services/ticker';
+import { Ticker, TickerEvent } from '../../../../src/soundscape/services/ticker';
+
 
 describe ('Ticker', function () {
     var tk, options, update;
@@ -110,7 +111,7 @@ describe ('Ticker', function () {
             it ('should emit the START event', function () {
                 spyOn(tk, 'emit');
                 tk.start();
-                expect(tk.emit).toHaveBeenCalledWith(Ticker.START);
+                expect(tk.emit).toHaveBeenCalledWith(TickerEvent.START);
             });
 
             it ('should call the tick method every (n)milliseconds based on the interval', function ( ) {
@@ -143,7 +144,7 @@ describe ('Ticker', function () {
             it ('should emit the STOP event', function () {
                 spyOn(tk, 'emit');
                 tk.stop();
-                expect(tk.emit).toHaveBeenCalledWith(Ticker.STOP);
+                expect(tk.emit).toHaveBeenCalledWith(TickerEvent.STOP);
             });
         });
 
@@ -151,7 +152,7 @@ describe ('Ticker', function () {
             it ('should broadcast the TICK event', function () {
                 spyOn(tk, 'emit');
                 tk.tick();
-                expect(tk.emit).toHaveBeenCalledWith(Ticker.TICK);
+                expect(tk.emit).toHaveBeenCalledWith(TickerEvent.TICK);
             });
         });
 

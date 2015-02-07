@@ -1,6 +1,12 @@
 // Import dependencies
-import BaseControl from './base-control';
+import { BaseControl, BaseControlEvent } from './base-control';
 import { Interpolation } from '../common/math';
+
+// Event String Constants
+export var GraphControlEvent = Object.assign({
+    ADD_POINTS: 'add_points',
+    REMOVE_POINT: 'remove_point'
+}, BaseControlEvent);
 
 export class GraphControl extends BaseControl {
     constructor (options={}) {
@@ -26,7 +32,7 @@ export class GraphControl extends BaseControl {
             this.sortPointsByTime();
         }
 
-        this.emit(GraphControl.ADD_POINTS , this.points);
+        this.emit(GraphControlEvent.ADD_POINTS , this.points);
         return this.points;
     }
 
@@ -35,7 +41,7 @@ export class GraphControl extends BaseControl {
             && pointIndex > 0
             && pointIndex < this.points.length - 1) {
             this.points.splice(pointIndex, 1);
-            this.emit(GraphControl.REMOVE_POINT, this.points);
+            this.emit(GraphControlEvent.REMOVE_POINT, this.points);
             return this.points;
         }
     }
@@ -104,8 +110,5 @@ export class GraphControl extends BaseControl {
         this.sortPointsByTime();
     }
 }
-// Event String Constants
-GraphControl.ADD_POINTS   = 'add_points';
-GraphControl.REMOVE_POINT = 'remove_point';
 
 export default GraphControl;

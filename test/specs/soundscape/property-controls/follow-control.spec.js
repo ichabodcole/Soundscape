@@ -1,5 +1,5 @@
 import BaseControl from '../../../../src/soundscape/property-controls/base-control';
-import FollowControl from '../../../../src/soundscape/property-controls/follow-control';
+import { FollowControl, FollowControlEvent } from '../../../../src/soundscape/property-controls/follow-control';
 
 describe ('FollowControl', function () {
     var fc, options, model, listener, noop;
@@ -119,7 +119,7 @@ describe ('FollowControl', function () {
                 spyOn(bc, 'on');
                 fc.target = bc;
                 fc.start();
-                expect(fc.target.on).toHaveBeenCalledWith(FollowControl.VALUE_CHANGE, jasmine.any(Function));
+                expect(fc.target.on).toHaveBeenCalledWith(FollowControlEvent.VALUE_CHANGE, jasmine.any(Function));
             });
 
             it ('should not do anything if a target is has not been set when called', function () {
@@ -133,7 +133,7 @@ describe ('FollowControl', function () {
                 spyOn(fc, 'emit');
                 fc.target = bc;
                 fc.start();
-                expect(fc.emit).toHaveBeenCalledWith(FollowControl.START);
+                expect(fc.emit).toHaveBeenCalledWith(FollowControlEvent.START);
             });
         });
 
@@ -147,7 +147,7 @@ describe ('FollowControl', function () {
                 fc.target = bc;
                 fc.start();
                 fc.stop();
-                expect(fc.target.removeListener).toHaveBeenCalledWith(FollowControl.VALUE_CHANGE, jasmine.any(Function));
+                expect(fc.target.removeListener).toHaveBeenCalledWith(FollowControlEvent.VALUE_CHANGE, jasmine.any(Function));
             });
 
             it ('should do nothing if a targetToken has not been set', function () {
@@ -162,7 +162,7 @@ describe ('FollowControl', function () {
                 fc.target = bc;
                 fc.start();
                 fc.stop();
-                expect(fc.emit).toHaveBeenCalledWith(FollowControl.STOP);
+                expect(fc.emit).toHaveBeenCalledWith(FollowControlEvent.STOP);
             });
         });
 

@@ -1,5 +1,5 @@
 import BaseControl from '../../../../src/soundscape/property-controls/base-control';
-import GraphControl from '../../../../src/soundscape/property-controls/graph-control';
+import { GraphControl, GraphControlEvent } from '../../../../src/soundscape/property-controls/graph-control';
 import { Interpolation } from '../../../../src/soundscape/common/math';
 
 describe ('GraphControl', function () {
@@ -101,7 +101,7 @@ describe ('GraphControl', function () {
             it ('should call the events broadcast method', function () {
                 spyOn(gc, 'emit');
                 gc.addPoints({});
-                expect(gc.emit).toHaveBeenCalledWith(GraphControl.ADD_POINTS, gc.points);
+                expect(gc.emit).toHaveBeenCalledWith(GraphControlEvent.ADD_POINTS, gc.points);
             });
         });
 
@@ -129,7 +129,7 @@ describe ('GraphControl', function () {
             it ('should call the events broadcast method', function () {
                 spyOn(gc, 'emit');
                 gc.removePoint(1);
-                expect(gc.emit).toHaveBeenCalledWith(GraphControl.REMOVE_POINT, gc.points);
+                expect(gc.emit).toHaveBeenCalledWith(GraphControlEvent.REMOVE_POINT, gc.points);
             });
         });
 

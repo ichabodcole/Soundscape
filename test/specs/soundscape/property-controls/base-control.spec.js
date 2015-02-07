@@ -1,4 +1,4 @@
-import BaseControl from '../../../../src/soundscape/property-controls/base-control';
+import { BaseControl, BaseControlEvent } from '../../../../src/soundscape/property-controls/base-control';
 
 describe ('BaseControl', function () {
     var bc, options, listener, model, myTransform;
@@ -129,7 +129,7 @@ describe ('BaseControl', function () {
                         value: 175
                     };
 
-                    expect(bc.emit).toHaveBeenCalledWith(BaseControl.VALUE_CHANGE, data);
+                    expect(bc.emit).toHaveBeenCalledWith(BaseControlEvent.VALUE_CHANGE, data);
                 });
             });
 
@@ -230,7 +230,7 @@ describe ('BaseControl', function () {
                         value: 175
                     };
 
-                    expect(bc.emit).toHaveBeenCalledWith(BaseControl.VALUE_CHANGE, data);
+                    expect(bc.emit).toHaveBeenCalledWith(BaseControlEvent.VALUE_CHANGE, data);
                 });
 
                 it ('should only set the model value if the passed value is a number', function () {

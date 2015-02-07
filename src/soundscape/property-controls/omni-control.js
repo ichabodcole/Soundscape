@@ -1,6 +1,6 @@
 import utils from '../services/utils';
 
-import BaseControl from './base-control';
+import { BaseControl, BaseControlEvent } from './base-control';
 import FollowControl from './follow-control';
 import GraphControl from './graph-control';
 
@@ -14,7 +14,12 @@ var omniControlDefaults = {
         graph: []
     };
 
-class OmniControl extends BaseControl {
+// Event name constants
+export var OmniControlEvent = Object.assign({
+    CONTROL_TYPE_CHANGE: 'control_type_change'
+}, BaseControlEvent);
+
+export class OmniControl extends BaseControl {
     // "Private" methods
     __isValidControlType (controlType) {
         if(this.controlTypes.indexOf(controlType) === -1) {
@@ -82,14 +87,14 @@ class OmniControl extends BaseControl {
             if (this.controlType !== controlType) {
                 // Stop listening to the previous control instance
                 if(this.controlInstance != null) {
-                    this.controlInstance.removeListener(OmniControl.VALUE_CHANGE, this.controlListener);
+                    this.controlInstance.removeListener(OmniControlEvent.VALUE_CHANGE, this.controlListener);
                 }
 
                 this.model.controlType = controlType;
-                this.emit(OmniControl.CONTROL_TYPE_CHANGE, controlType);
+                this.emit(OmniControlEvent.CONTROL_TYPE_CHANGE, controlType);
                 this.controlInstance = this.controls[controlType];
                 this.controlListener = this.__onValueChange.bind(this);
-                this.controlInstance.on(OmniControl.VALUE_CHANGE, this.controlListener);
+                this.controlInstance.on(OmniControlEvent.VALUE_CHANGE, this.controlListener);
             }
         } else {
             throw new Error(`OmniControl: controlType (${controlType}), is not a valid controlType`);
@@ -105,7 +110,5 @@ class OmniControl extends BaseControl {
 OmniControl.BASE_CONTROL   = 'base_control';
 OmniControl.FOLLOW_CONTROL = 'follow_control';
 OmniControl.GRAPH_CONTROL  = 'graph_control';
-// Event name constants
-OmniControl.CONTROL_TYPE_CHANGE = 'control_type_change';
 
 export default OmniControl;

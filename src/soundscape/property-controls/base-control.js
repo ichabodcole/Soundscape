@@ -1,6 +1,10 @@
 var EventEmitter = require('events').EventEmitter;
 
-class BaseControl extends EventEmitter {
+export var BaseControlEvent = {
+    VALUE_CHANGE: 'value_change'
+};
+
+export class BaseControl extends EventEmitter {
 
     // Private Methods
     __getValueFromPercent (percent) {
@@ -142,7 +146,7 @@ class BaseControl extends EventEmitter {
                         value: this.value
                     };
 
-                    this.emit(BaseControl.VALUE_CHANGE, data);
+                    this.emit(BaseControlEvent.VALUE_CHANGE, data);
                 } else {
                     this.__handleError(`cannot set value property (${value}) higher than max property (${this.max})`);
                 }
@@ -160,7 +164,5 @@ class BaseControl extends EventEmitter {
     //     return this.model.propertyName;
     // }
 }
-
-BaseControl.VALUE_CHANGE = 'value_change';
 
 export default BaseControl;
