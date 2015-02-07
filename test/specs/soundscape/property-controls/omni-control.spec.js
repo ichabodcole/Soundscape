@@ -1,4 +1,4 @@
-import OmniControl from '../../../../src/soundscape/property-controls/omni-control';
+import { OmniControl, OmniControlEvent } from '../../../../src/soundscape/property-controls/omni-control';
 //import RangeControl from '../../../../src/soundscape/property-controls/base-control';
 //import FollowControl from '../../../../src/soundscape/property-controls/follow-control';
 //import GraphControl from '../../../../src/soundscape/property-controls/graph-control';
@@ -80,7 +80,7 @@ describe ('OmniControl', function () {
                 it('should emit the CONTROL_TYPE_CHANGE event', function() {
                     spyOn(omniCtrl, 'emit');
                     omniCtrl.controlType = OmniControl.FOLLOW_CONTROL;
-                    expect(omniCtrl.emit).toHaveBeenCalledWith(OmniControl.CONTROL_TYPE_CHANGE, OmniControl.FOLLOW_CONTROL);
+                    expect(omniCtrl.emit).toHaveBeenCalledWith(OmniControlEvent.CONTROL_TYPE_CHANGE, OmniControl.FOLLOW_CONTROL);
                 });
 
                 it('should not broadcast the CONTROL_TYPE_CHANGE if set to the same type of control', function() {

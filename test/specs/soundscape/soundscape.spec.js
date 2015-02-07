@@ -1,4 +1,4 @@
-import Soundscape from '../../../src/soundscape/soundscape';
+import { Soundscape, SoundscapeEvent } from '../../../src/soundscape/soundscape';
 import Timer from '../../../src/soundscape/services/timer';
 import { Channel } from '../../../src/soundscape/services/events';
 import SoundModule from '../../../src/soundscape/modules/sound-module';
@@ -123,7 +123,7 @@ describe ('Soundscape', function () {
             it('should emit an ADD_MODULE event', function() {
                 spyOn(scp, 'emit');
                 var returned = scp.addModule(mod);
-                expect(scp.emit).toHaveBeenCalledWith(Soundscape.ADD_MODULE, returned);
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.ADD_MODULE, returned);
             });
         });
 
@@ -153,7 +153,7 @@ describe ('Soundscape', function () {
                 spyOn(scp, 'emit');
                 var returned = scp.addModule(mod);
                 scp.removeModule(returned.id);
-                expect(scp.emit).toHaveBeenCalledWith(Soundscape.REMOVE_MODULE, returned);
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.REMOVE_MODULE, returned);
             });
         });
 
@@ -189,7 +189,7 @@ describe ('Soundscape', function () {
             it('should emit a PLAYING event', function() {
                 spyOn(scp, 'emit');
                 scp.play();
-                expect(scp.emit).toHaveBeenCalledWith(Soundscape.PLAY);
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.PLAY);
             });
 
             it('should call the start method of all SoundModules', function() {
@@ -231,7 +231,7 @@ describe ('Soundscape', function () {
                 scp.play();
                 spyOn(scp, 'emit');
                 scp.stop();
-                expect(scp.emit).toHaveBeenCalledWith(Soundscape.STOP);
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.STOP);
             });
 
             it('should call the stop method of all SoundModules', function() {
@@ -274,7 +274,7 @@ describe ('Soundscape', function () {
                 scp.play();
                 spyOn(scp, 'emit');
                 scp.pause();
-                expect(scp.emit).toHaveBeenCalledWith(Soundscape.PAUSE);
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.PAUSE);
             });
 
             it('should call the stop method of all SoundModules', function() {
@@ -313,7 +313,7 @@ describe ('Soundscape', function () {
                 spyOn(scp, 'emit');
                 var scpModule = scp.modules[0];
                 scp.soloModule(scpModule.id);
-                expect(scp.emit).toHaveBeenCalledWith(Soundscape.SOLO_MODULE, scpModule);
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.SOLO_MODULE, scpModule);
             });
 
             it('should set the module entrys soloed value to true', function() {
@@ -355,7 +355,7 @@ describe ('Soundscape', function () {
                 var scpModule = scp.modules[0];
                 scp.soloModule(scpModule.id);
                 scp.unsoloModule(scpModule.id);
-                expect(scp.emit).toHaveBeenCalledWith(Soundscape.UNSOLO_MODULE, scpModule);
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.UNSOLO_MODULE, scpModule);
             });
 
             it('should set the module entrys soloed value to false', function() {

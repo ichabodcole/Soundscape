@@ -1,5 +1,5 @@
 import utils from '../services/utils';
-import SoundModule from './sound-module';
+import { SoundModule, SoundModuleEvent } from './sound-module';
 import OmniControl from '../property-controls/omni-control';
 
 var colorNoiseDefaults = {
@@ -7,7 +7,9 @@ var colorNoiseDefaults = {
     noiseType: 'brown'
 };
 
-class ColorNoiseModule extends SoundModule {
+export var ColorNoiseModuleEvent = Object.assign({}, SoundModuleEvent);
+
+export class ColorNoiseModule extends SoundModule {
     constructor (options) {
         super(options);
         // Setup the sound generator
@@ -37,6 +39,12 @@ class ColorNoiseModule extends SoundModule {
         this.generator.remove();
     }
 
+    serialize() {
+        var data = super.serialize();
+        data.noiseType = this.noiseType;
+        return data;
+    }
+
     /*************************************
       *      Getters and Setters
     **************************************/
@@ -46,12 +54,6 @@ class ColorNoiseModule extends SoundModule {
 
     set noiseType(type) {
         this.generator.setNoiseType(type);
-    }
-
-    get state() {
-        var state = super.state;
-        state.noiseType = this.noiseType;
-        return state;
     }
 }
 

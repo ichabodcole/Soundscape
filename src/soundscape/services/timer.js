@@ -1,4 +1,10 @@
-import Ticker from './ticker';
+import { Ticker, TickerEvent } from './ticker';
+
+export var TimerEvent = Object.assign({
+    // Timer event types
+    PAUSE: 'timer:pause',
+    COMPLETE: 'timer:complete'
+}, TickerEvent);
 
 export class Timer extends Ticker {
     constructor (options={}) {
@@ -18,7 +24,7 @@ export class Timer extends Ticker {
             if (this.duration > 0 && this.duration != null) {
                 this.state = Timer.TICKING;
                 this.createInterval();
-                this.emit(Timer.START);
+                this.emit(TimerEvent.START);
                 this.startTime = Date.now();
                 // reset the pause time variables
                 this.timeAtPause = 0;
@@ -33,7 +39,7 @@ export class Timer extends Ticker {
             this.state = Timer.PAUSED;
             this.timeAtPause = this.currentTime;
             this.destroyInterval();
-            this.emit(Timer.PAUSE);
+            this.emit(TimerEvent.PAUSE);
         } else if (this.state === Timer.PAUSED) {
             this.start();
         }
@@ -42,7 +48,7 @@ export class Timer extends Ticker {
     stop () {
         this.state = Timer.STOPPED;
         this.destroyInterval();
-        this.emit(Timer.STOP);
+        this.emit(TimerEvent.STOP);
         this.timeAtPause = 0;
     }
 
@@ -62,8 +68,8 @@ export class Timer extends Ticker {
                 progress: 1
             };
 
-            this.emit(Timer.TICK, data);
-            this.emit(Timer.COMPLETE);
+            this.emit(TimerEvent.TICK, data);
+            this.emit(TimerEvent.COMPLETE);
 
         } else {
             this.currentTime = currentTime;
@@ -75,7 +81,7 @@ export class Timer extends Ticker {
                 progress: this.progress
             };
 
-            this.emit(Timer.TICK, data);
+            this.emit(TimerEvent.TICK, data);
         }
     }
 
@@ -135,9 +141,6 @@ export class Timer extends Ticker {
         return this.model.progress;
     }
 }
-// Timer event types
-Timer.PAUSE    = 'pause';
-Timer.COMPLETE = 'complete';
 // Timer states
 Timer.PAUSED   = 'paused';
 

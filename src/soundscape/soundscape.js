@@ -8,6 +8,19 @@ var EventEmitter = require('events').EventEmitter;
 
 
 var soundscapeDefaults = {};
+
+// Event Strings Constants
+export var SoundscapeEvent = {
+    PLAY: 'soundscape:play',
+    PAUSE: 'soundscape:pause',
+    STOP: 'soundscape:stop',
+    SOLO_MODULE: 'soundscape:solo-module',
+    UNSOLO_MODULE: 'soundscape:unsolo-module',
+    ADD_MODULE: 'soundscape:add-module',
+    REMOVE_MODULE: 'soundscape:remove-module',
+    COMPLETE: 'soundscape:complete'
+};
+
 /**
 * @description
 * Create a new Soundscape instance
@@ -32,21 +45,21 @@ export class Soundscape extends EventEmitter {
     play() {
         this.state = Soundscape.PLAYING;
         this.timer.start();
-        this.emit(Soundscape.PLAY);
+        this.emit(SoundscapeEvent.PLAY);
         this.startModules();
     }
 
     pause() {
         this.state = Soundscape.PAUSED;
         this.timer.pause();
-        this.emit(Soundscape.PAUSE);
+        this.emit(SoundscapeEvent.PAUSE);
         this.stopModules();
     }
 
     stop() {
         this.state = Soundscape.STOPPED;
         this.timer.stop();
-        this.emit(Soundscape.STOP);
+        this.emit(SoundscapeEvent.STOP);
         this.stopModules();
     }
 
@@ -58,7 +71,7 @@ export class Soundscape extends EventEmitter {
             var scpModule = filtered[0];
             scpModule.soloed = true;
             scpModule.module.stop();
-            this.emit(Soundscape.SOLO_MODULE, scpModule);
+            this.emit(SoundscapeEvent.SOLO_MODULE, scpModule);
             return scpModule;
         }
         return false;
@@ -73,7 +86,7 @@ export class Soundscape extends EventEmitter {
             var scpModule = filtered[0];
             scpModule.soloed = false;
             scpModule.module.start();
-            this.emit(Soundscape.UNSOLO_MODULE, scpModule);
+            this.emit(SoundscapeEvent.UNSOLO_MODULE, scpModule);
             return scpModule;
         }
         return false;
@@ -87,7 +100,7 @@ export class Soundscape extends EventEmitter {
                 module: module
             };
             this.modules.push(entry);
-            this.emit(Soundscape.ADD_MODULE, entry);
+            this.emit(SoundscapeEvent.ADD_MODULE, entry);
             return entry;
         } else {
             throw(new Error('addModule module arument must be a SoundModule instance'));
@@ -103,7 +116,7 @@ export class Soundscape extends EventEmitter {
             }
         });
         if(module != null) {
-            this.emit(Soundscape.REMOVE_MODULE, module);
+            this.emit(SoundscapeEvent.REMOVE_MODULE, module);
         }
         return module;
     }
@@ -160,15 +173,6 @@ export class Soundscape extends EventEmitter {
 }
 
 Soundscape.defaults = soundscapeDefaults;
-// Event Strings Constants
-Soundscape.PLAY          = 'soundscape:play';
-Soundscape.PAUSE         = 'soundscape:pause';
-Soundscape.STOP          = 'soundscape:stop';
-Soundscape.SOLO_MODULE   = 'soundscape:solo-module';
-Soundscape.UNSOLO_MODULE = 'soundscape:unsolo-module';
-Soundscape.ADD_MODULE    = 'soundscape:add-module';
-Soundscape.REMOVE_MODULE = 'soundscape:remove-module';
-Soundscape.COMPLETE      = 'soundscape:complete';
 // State String Constants
 Soundscape.PLAYING = 'soundscape:playing';
 Soundscape.STOPPED = 'soundscape:stopped';

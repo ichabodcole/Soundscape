@@ -1,4 +1,4 @@
-import SoundModule from '../../../../src/soundscape/modules/sound-module';
+import { SoundModule, SoundModuleEvent } from '../../../../src/soundscape/modules/sound-module';
 import OmniControl from '../../../../src/soundscape/property-controls/omni-control';
 
 describe ('SoundModule', function () {
@@ -109,23 +109,6 @@ describe ('SoundModule', function () {
                 expect(sm.gain).toBe(0);
             });
         });
-
-        describe ('state', function() {
-            it ('should return an object describing the modules current state', function() {
-                var sm = new SoundModule(options);
-                var expectedState = {
-                    type: 'sound-module',
-                    muted: false,
-                    volume: {
-                        min: 0,
-                        max: 1,
-                        value: 0.5,
-                        controlType: OmniControl.BASE_CONTROL
-                    }
-                };
-                expect(sm.state).toEqual(expectedState);
-            });
-        });
     });
 
     describe ('methods', function () {
@@ -136,6 +119,18 @@ describe ('SoundModule', function () {
                 sm.start();
                 expect(sm.volume.on).toHaveBeenCalled();
             });
+
+            it('should emit a START event', function() {
+                spyOn(sm,'emit');
+                sm.start();
+                expect(sm.emit).toHaveBeenCalledWith(SoundModuleEvent.START);
+            });
+
+            it('should set the state property to ACTIVE', function() {
+                sm.start();
+                expect(sm.state).not.toBe(undefined);
+                expect(sm.state).toBe(SoundModule.ACTIVE);
+            });
         });
 
         describe ('stop', function() {
@@ -143,6 +138,18 @@ describe ('SoundModule', function () {
                 spyOn(sm.volume, 'removeListener');
                 sm.stop();
                 expect(sm.volume.removeListener).toHaveBeenCalled();
+            });
+
+            it('should emit a STOP event', function() {
+                spyOn(sm,'emit');
+                sm.stop();
+                expect(sm.emit).toHaveBeenCalledWith(SoundModuleEvent.STOP);
+            });
+
+            it('should set the state property to STOPPED', function() {
+                sm.stop();
+                expect(sm.state).not.toBe(undefined);
+                expect(sm.state).toBe(SoundModule.STOPPED);
             });
         });
 
@@ -152,6 +159,12 @@ describe ('SoundModule', function () {
                 sm.connect({});
                 expect(sm.gainNode.connect).toHaveBeenCalled();
             });
+
+            it('should emit a CONNECT event', function() {
+                spyOn(sm,'emit');
+                sm.connect({});
+                expect(sm.emit).toHaveBeenCalledWith(SoundModuleEvent.CONNECT);
+            });
         });
 
         describe ('disconnect', function() {
@@ -159,6 +172,12 @@ describe ('SoundModule', function () {
                 spyOn(sm.gainNode, 'disconnect');
                 sm.disconnect();
                 expect(sm.gainNode.disconnect).toHaveBeenCalled();
+            });
+
+            it('should emit a DISCONNECT event', function() {
+                spyOn(sm,'emit');
+                sm.disconnect();
+                expect(sm.emit).toHaveBeenCalledWith(SoundModuleEvent.DISCONNECT);
             });
         });
 
@@ -177,6 +196,29 @@ describe ('SoundModule', function () {
                 spyOn(sm, 'disconnect');
                 sm.destroy();
                 expect(sm.disconnect).toHaveBeenCalled();
+            });
+
+            it('should emit a DESTROY event', function() {
+                spyOn(sm,'emit');
+                sm.destroy();
+                expect(sm.emit).toHaveBeenCalledWith(SoundModuleEvent.DESTROY);
+            });
+        });
+
+        describe ('serialize', function() {
+            it ('should return an object describing the modules current state', function() {
+                var sm = new SoundModule(options);
+                var expectedState = {
+                    type: 'sound-module',
+                    muted: false,
+                    volume: {
+                        min: 0,
+                        max: 1,
+                        value: 0.5,
+                        controlType: OmniControl.BASE_CONTROL
+                    }
+                };
+                expect(sm.serialize()).toEqual(expectedState);
             });
         });
     });

@@ -1,5 +1,5 @@
-import BinauralBeatModule from '../../../../src/soundscape/modules/binaural-beat';
-import OmniControl from '../../../../src/soundscape/property-controls/omni-control';
+import { BinauralBeatModule, BinauralBeatModuleEvent } from '../../../../src/soundscape/modules/binaural-beat';
+import { OmniControl, OmniControlEvent } from '../../../../src/soundscape/property-controls/omni-control';
 
 describe ('BinauralBeatModule', function () {
     var sm, options;
@@ -93,33 +93,6 @@ describe ('BinauralBeatModule', function () {
             });
         });
 
-        describe ('state', function() {
-            it ('should return an object describing the modules current state', function() {
-                var sm = new BinauralBeatModule(options);
-                var expectedState = {
-                    type: 'binaural-beat-module',
-                    muted: false,
-                    volume: {
-                        min: 0,
-                        max: 1,
-                        value: 0.5,
-                        controlType: OmniControl.BASE_CONTROL
-                    },
-                    pitch: {
-                        min: 0,
-                        max: 1200,
-                        value: 440
-                    },
-                    beatRate: {
-                        min: 0,
-                        max: 30,
-                        value: 12
-                    }
-                };
-                expect(sm.state).toEqual(expectedState);
-            });
-        });
-
         describe ('waveType', function () {
 
             it ('should be defined', function() {
@@ -209,6 +182,12 @@ describe ('BinauralBeatModule', function () {
                 sm.start();
                 expect(sm.beatRate.on).toHaveBeenCalled();
             });
+
+            it('should set the state property to ACTIVE', function() {
+                sm.start();
+                expect(sm.state).not.toBe(undefined);
+                expect(sm.state).toBe(BinauralBeatModule.ACTIVE);
+            });
         });
 
         describe ('stop', function() {
@@ -221,13 +200,19 @@ describe ('BinauralBeatModule', function () {
             it ('should call the pitch controls removeListener method', function() {
                 spyOn(sm.pitch, 'removeListener');
                 sm.stop();
-                expect(sm.pitch.removeListener).toHaveBeenCalled();
+                expect(sm.pitch.removeListener).toHaveBeenCalledWith(OmniControlEvent.VALUE_CHANGE, jasmine.any(Function));
             });
 
             it ('should call the beatRate controls removeListener method', function() {
                 spyOn(sm.beatRate, 'removeListener');
                 sm.stop();
-                expect(sm.beatRate.removeListener).toHaveBeenCalled();
+                expect(sm.beatRate.removeListener).toHaveBeenCalledWith(OmniControlEvent.VALUE_CHANGE, jasmine.any(Function));
+            });
+
+            it('should set the state property to STOPPED', function() {
+                sm.stop();
+                expect(sm.state).not.toBe(undefined);
+                expect(sm.state).toBe(BinauralBeatModule.STOPPED);
             });
         });
 
@@ -237,6 +222,16 @@ describe ('BinauralBeatModule', function () {
                 sm.connect({});
                 expect(sm.gainNode.connect).toHaveBeenCalled();
             });
+
+            it('should emit a CONNECT event', function() {
+                /**
+                * TODO: consider mocking the audioCtx for testing.
+                */
+                var gainNode = sm.audioCtx.createGain();
+                spyOn(sm,'emit');
+                sm.connect(gainNode);
+                expect(sm.emit).toHaveBeenCalledWith(BinauralBeatModuleEvent.CONNECT);
+            });
         });
 
         describe ('disconnect', function() {
@@ -244,6 +239,12 @@ describe ('BinauralBeatModule', function () {
                 spyOn(sm.gainNode, 'disconnect');
                 sm.disconnect();
                 expect(sm.gainNode.disconnect).toHaveBeenCalled();
+            });
+
+            it('should emit a DISCONNECT event', function() {
+                spyOn(sm,'emit');
+                sm.disconnect();
+                expect(sm.emit).toHaveBeenCalledWith(BinauralBeatModuleEvent.DISCONNECT);
             });
         });
 
@@ -262,6 +263,39 @@ describe ('BinauralBeatModule', function () {
                 spyOn(sm, 'disconnect');
                 sm.destroy();
                 expect(sm.disconnect).toHaveBeenCalled();
+            });
+
+            it('should emit a DESTROY event', function() {
+                spyOn(sm,'emit');
+                sm.destroy();
+                expect(sm.emit).toHaveBeenCalledWith(BinauralBeatModuleEvent.DESTROY);
+            });
+        });
+
+        describe ('serialize', function() {
+            it ('should return an object describing the modules current state', function() {
+                var sm = new BinauralBeatModule(options);
+                var expectedState = {
+                    type: 'binaural-beat-module',
+                    muted: false,
+                    volume: {
+                        min: 0,
+                        max: 1,
+                        value: 0.5,
+                        controlType: OmniControl.BASE_CONTROL
+                    },
+                    pitch: {
+                        min: 0,
+                        max: 1200,
+                        value: 440
+                    },
+                    beatRate: {
+                        min: 0,
+                        max: 30,
+                        value: 12
+                    }
+                };
+                expect(sm.serialize()).toEqual(expectedState);
             });
         });
     });
