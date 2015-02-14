@@ -1,4 +1,6 @@
-
+//Soundscape Example:
+import SoundscapeExample from './scripts/soundscape-example';
+SoundscapeExample();
 
 //Controls Examples;
 //import baseControlExample from './scripts/controls/base-control-example';
@@ -13,11 +15,11 @@
 //import omniControlExample from './scripts/controls/omni-control-example';
 //omniControlExample();
 
-import colorNoiseExample from './scripts/modules/color-noise-example';
+//import colorNoiseExample from './scripts/modules/color-noise-example';
 //colorNoiseExample();
 
-import binauralBeatExample from './scripts/modules/binaural-beat-example';
-binauralBeatExample();
+//import binauralBeatExample from './scripts/modules/binaural-beat-example';
+//binauralBeatExample();
 
 // import SoundModule from '../../soundscape/modules/sound-module';
 // var scp = SoundscapeFactory.create();
