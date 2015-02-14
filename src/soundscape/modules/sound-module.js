@@ -95,7 +95,7 @@ export class SoundModule extends EventEmitter {
     }
 
     serialize () {
-        var state = {
+        var data = {
             type: this.type,
             muted: this.mute,
             volume: {
@@ -105,7 +105,7 @@ export class SoundModule extends EventEmitter {
                 controlType: this.volume.controlType
             }
         };
-        return state;
+        return data;
     }
 
     /*************************************
