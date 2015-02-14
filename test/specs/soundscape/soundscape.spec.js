@@ -1,7 +1,15 @@
 import { Soundscape, SoundscapeEvent } from '../../../src/soundscape/soundscape';
-import Timer from '../../../src/soundscape/services/timer';
+import { Timer, TimerEvent } from '../../../src/soundscape/services/timer';
 import { Channel } from '../../../src/soundscape/services/events';
 import SoundModule from '../../../src/soundscape/modules/sound-module';
+import { ModuleType, ModuleEvent } from '../../../src/soundscape/constants';
+
+function addSoundModules(scp, options={}, total=1) {
+    for(var i=0; i<total; i++) {
+        scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+    }
+    return scp.modules;
+}
 
 describe ('Soundscape', function () {
     var scp, options;
@@ -39,6 +47,21 @@ describe ('Soundscape', function () {
             it('should be a Timer instance', function() {
                 expect(scp.timer instanceof Timer).toBe(true);
             });
+
+            describe('completing the timer', function() {
+                it('should emit a COMPLETE event when the soundscape duration has elapsed', function() {
+                    jasmine.clock().mockDate(new Date());
+                    jasmine.clock().install();
+                    var scp = new Soundscape();
+                    scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                    scp.duration = 1500;
+                    spyOn(scp, 'emit');
+                    scp.start();
+                    jasmine.clock().tick(2000);
+                    expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.COMPLETE);
+                    jasmine.clock().uninstall();
+                });
+            });
         });
 
         describe('modules', function() {
@@ -60,6 +83,16 @@ describe ('Soundscape', function () {
                 scp.duration = 5000;
                 expect(scp.duration).toBe(5000);
             });
+
+            it('should set the timers duration property', function() {
+                scp.duration = 5000;
+                expect(scp.timer.duration).toBe(5000);
+            });
+
+            it('should get the timers duration property', function() {
+                scp.duration = 5000;
+                expect(scp.duration).toEqual(scp.timer.duration);
+            });
         });
 
         describe('state', function() {
@@ -78,61 +111,69 @@ describe ('Soundscape', function () {
             });
 
             it('should return a list of soloed modules', function() {
-                var soloedModules = [
-                    scp.addModule(new SoundModule()),
-                    scp.addModule(new SoundModule())
-                ];
-                scp.soloModule(scp.modules[0].id);
-                scp.soloModule(scp.modules[1].id);
-                expect(scp.soloedModules).toEqual(soloedModules);
+                var mod1 = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                var mod2 = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+
+                mod1.solo = true;
+                mod2.solo = true;
+
+                var expectedModules = [mod1, mod2];
+                expect(scp.soloedModules).toEqual(expectedModules);
+            });
+        });
+
+        describe('volume', function() {
+            it('should be defined', function() {
+                expect(scp.volume).toBeDefined();
+            });
+
+            it('should have a default value of 0.5', function() {
+                expect(scp.volume).toBe(0.5);
+            });
+
+            it('should set the masterGain value', function() {
+                scp.volume = 0.65;
+                expect(scp.masterGain.gain.value).toBeCloseTo(0.65);
             });
         });
     });
 
     describe ('methods', function () {
         describe('addModule', function() {
-            var mod, returned;
+            var options, addedMod;
 
             beforeEach(function() {
-                mod = new SoundModule();
-                returned = scp.addModule(mod);
-            });
-
-            it('should throw an error if the module argument is not a SoundModule instance', function() {
-                expect(function(){
-                    scp.addModule({});
-                }).toThrow(new Error('addModule module arument must be a SoundModule instance'));
+                options = {};
+                addedMod = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
             });
 
             it('should increase the modules array length', function() {
                 expect(scp.modules.length).toBe(1);
             });
 
-            it('should return an object with and id property', function() {
-                expect(returned.id).toBeDefined();
+            it('should call the __setupModule method', function() {
+                spyOn(scp, '__setupModule');
+                addSoundModules(scp, options, 1);
+                expect(scp.__setupModule).toHaveBeenCalled();
             });
 
-            it('should return an object with a soloed property set to false', function() {
-                expect(returned.soloed).toBe(false);
-            });
-
-            it('should return an object with a module property', function() {
-                expect(returned.module).toBeDefined();
+            it('should return a SoundModule instance', function() {
+                expect(addedMod instanceof SoundModule).toBe(true);
             });
 
             it('should emit an ADD_MODULE event', function() {
                 spyOn(scp, 'emit');
-                var returned = scp.addModule(mod);
-                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.ADD_MODULE, returned);
+                var addedMod = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.ADD_MODULE, addedMod);
             });
         });
 
         describe('removeModule', function() {
-            var mod, added, removed;
+            var addedMod, removedMod, options;
 
             beforeEach(function() {
-                mod = new SoundModule();
-                added = scp.addModule(mod);
+                options = {};
+                addedMod = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
             });
 
             it('should be defined', function() {
@@ -140,20 +181,19 @@ describe ('Soundscape', function () {
             });
 
             it('should remove a module from the modules array when passed a valued module id', function() {
-                removed = scp.removeModule(added.id);
+                scp.removeModule(addedMod.id);
                 expect(scp.modules.length).toBe(0);
             });
 
             it('should return the removed module', function() {
-                removed = scp.removeModule(added.id);
-                expect(removed).toEqual(added);
+                removedMod = scp.removeModule(addedMod.id);
+                expect(removedMod).toEqual(addedMod);
             });
 
             it('should emit an REMOVE_MODULE event', function() {
                 spyOn(scp, 'emit');
-                var returned = scp.addModule(mod);
-                scp.removeModule(returned.id);
-                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.REMOVE_MODULE, returned);
+                scp.removeModule(addedMod.id);
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.REMOVE_MODULE, addedMod);
             });
         });
 
@@ -163,223 +203,248 @@ describe ('Soundscape', function () {
             });
 
             it('should return a module when give a valid module id', function() {
-                var mod = new SoundModule();
-                var added = scp.addModule(mod);
-                var returned = scp.getModuleById(added.id);
-                expect(returned).toEqual(added);
+                var addedMod = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                var returnedMod = scp.getModuleById(addedMod.id);
+                expect(returnedMod).toEqual(addedMod);
             });
         });
 
-        describe('play', function() {
+        describe('start', function() {
             it('should be defined', function() {
-                expect(scp.play).toBeDefined();
+                expect(scp.start).toBeDefined();
             });
 
             it('should call the timers start method', function () {
                 spyOn(scp.timer, 'start');
-                scp.play();
+                scp.start();
                 expect(scp.timer.start).toHaveBeenCalled();
             });
 
-            it('should set the state property value to PLAYING', function() {
-                scp.play();
-                expect(scp.state).toBe(Soundscape.PLAYING);
+            it('should set the state property value to ACTIVE', function() {
+                scp.start();
+                expect(scp.state).toBe(Soundscape.ACTIVE);
             });
 
-            it('should emit a PLAYING event', function() {
+            it('should emit a START event', function() {
                 spyOn(scp, 'emit');
-                scp.play();
-                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.PLAY);
+                scp.start();
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.START);
             });
 
-            it('should call the start method of all SoundModules', function() {
-                var mod1 = new SoundModule();
-                var mod2 = new SoundModule();
-
-                spyOn(mod1, 'start');
-                spyOn(mod2, 'start');
-
-                scp.addModule(mod1);
-                scp.addModule(mod2);
-
-                scp.play();
-
-                expect(mod1.start).toHaveBeenCalled();
-                expect(mod2.start).toHaveBeenCalled();
+            it('should call the startModules method', function() {
+                spyOn(scp, '__startModules');
+                scp.start();
+                expect(scp.__startModules).toHaveBeenCalled();
             });
         });
 
         describe('stop', function() {
+            beforeEach(function() {
+                scp.start();
+            });
+
             it('should be defined', function() {
                 expect(scp.stop).toBeDefined();
             });
 
             it('should set the state property to STOPPED', function() {
-                scp.play();
                 scp.stop();
                 expect(scp.state).toBe(Soundscape.STOPPED);
             });
 
             it('should call the timers stop method', function() {
-                scp.play();
                 spyOn(scp.timer, 'stop');
                 scp.stop();
                 expect(scp.timer.stop).toHaveBeenCalled();
             });
 
             it('should emit a STOP event', function() {
-                scp.play();
                 spyOn(scp, 'emit');
                 scp.stop();
                 expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.STOP);
             });
 
-            it('should call the stop method of all SoundModules', function() {
-                var mod1 = new SoundModule();
-                var mod2 = new SoundModule();
-
-                spyOn(mod1, 'stop');
-                spyOn(mod2, 'stop');
-
-                scp.addModule(mod1);
-                scp.addModule(mod2);
-
-                scp.play();
+            it('should call the stopModules methods', function() {
+                spyOn(scp, '__stopModules');
                 scp.stop();
-
-                expect(mod1.stop).toHaveBeenCalled();
-                expect(mod2.stop).toHaveBeenCalled();
+                expect(scp.__stopModules).toHaveBeenCalled();
             });
         });
 
         describe('pause', function() {
+            beforeEach(function() {
+                scp.start();
+            });
+
             it('should be defined', function() {
                 expect(scp.pause).toBeDefined();
             });
 
             it('should set the state property to PAUSED', function() {
-                scp.play();
                 scp.pause()
                 expect(scp.state).toBe(Soundscape.PAUSED);
             });
 
             it('should call the timers pause method', function() {
-                scp.play();
                 spyOn(scp.timer, 'pause');
                 scp.pause();
                 expect(scp.timer.pause).toHaveBeenCalled();
             });
 
             it('should emit a PAUSE event', function() {
-                scp.play();
                 spyOn(scp, 'emit');
                 scp.pause();
                 expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.PAUSE);
             });
 
-            it('should call the stop method of all SoundModules', function() {
-                var mod1 = new SoundModule();
-                var mod2 = new SoundModule();
+            it('should call the stopModules methods', function() {
+                spyOn(scp, '__stopModules');
+                scp.pause();
+                expect(scp.__stopModules).toHaveBeenCalled();
+            })
+        });
 
+        describe('destroy', function() {
+            it('should be defined', function() {
+                expect(scp.destroy).toBeDefined();
+            });
+
+            it('should remove the Timer.COMPLETE listener', function() {
+                spyOn(scp.timer, 'removeListener');
+                scp.destroy();
+                expect(scp.timer.removeListener).toHaveBeenCalledWith(TimerEvent.COMPLETE, scp.timerListener);
+            });
+
+            it('should teardown the modules', function() {
+                spyOn(scp, '__cleanupModule');
+                addSoundModules(scp, options, 5);
+                scp.destroy();
+                expect(scp.__cleanupModule).toHaveBeenCalled();
+                expect(scp.__cleanupModule.calls.count()).toBe(5);
+            });
+        });
+
+        describe('__startModules', function() {
+            it('should call the start method on all modules', function() {
+                var mod1 = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                var mod2 = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                spyOn(mod1, 'start');
+                spyOn(mod2, 'start');
+                scp.__startModules();
+                expect(mod1.start).toHaveBeenCalled();
+                expect(mod2.start).toHaveBeenCalled();
+            });
+        });
+
+        describe('__stopModules', function() {
+            it('should call the stop method on all modules', function() {
+                var mod1 = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                var mod2 = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
                 spyOn(mod1, 'stop');
                 spyOn(mod2, 'stop');
-
-                scp.addModule(mod1);
-                scp.addModule(mod2);
-
-                scp.play();
-                scp.pause();
-
+                scp.__stopModules();
                 expect(mod1.stop).toHaveBeenCalled();
                 expect(mod2.stop).toHaveBeenCalled();
             });
         });
 
-        describe('soloModule', function() {
-            beforeEach(function() {
-                var mod1 = new SoundModule();
-                var mod2 = new SoundModule();
-                var mod3 = new SoundModule();
-                scp.addModule(mod1);
-                scp.addModule(mod2);
-                scp.addModule(mod3);
+        // Tests for Private methods
+        describe('__setupModule', function() {
+            it('should call the modules on method with a SOLO event type and soloListener', function() {
+                var module = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                spyOn(module, 'on');
+                scp.__setupModule(module);
+                expect(module.on).toHaveBeenCalledWith(ModuleEvent.SOLO, scp.soloListener);
             });
 
-            it('should be defined', function() {
-                expect(scp.soloModule).toBeDefined(0);
+            it('should call the modules on connect with the soundscapes gainNode', function() {
+                var module = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                spyOn(module, 'connect');
+                scp.__setupModule(module);
+                expect(module.connect).toHaveBeenCalledWith(scp.gainNode);
             });
 
-            it('should emit a SOLO_MODULE event', function() {
-                spyOn(scp, 'emit');
-                var scpModule = scp.modules[0];
-                scp.soloModule(scpModule.id);
-                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.SOLO_MODULE, scpModule);
-            });
-
-            it('should set the module entrys soloed value to true', function() {
-                var scpModule = scp.modules[0];
-                scp.soloModule(scpModule.id);
-                expect(scpModule.soloed).toBe(true);
-            });
-
-            it('should call the soloed modules stop method', function() {
-                var scpModule = scp.modules[0];
-                spyOn(scpModule.module, 'stop');
-                scp.soloModule(scpModule.id);
-                expect(scpModule.module.stop).toHaveBeenCalled();
-            });
-
-            it('should return the soloed soundscape module', function() {
-                var scpModule = scp.modules[0];
-                var soloed = scp.soloModule(scpModule.id);
-                expect(soloed).toEqual(scpModule);
+            it('should start the module if the Soundscape is ACTIVE', function() {
+                scp.start();
+                var module = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                spyOn(module, 'start');
+                scp.__setupModule(module);
+                expect(module.start).toHaveBeenCalled();
             });
         });
 
-        describe('unsoloModule', function() {
+        describe('__cleanupModule', function() {
+            it('should call the modules removeListener method with a SOLO event type and soloListener', function() {
+                var module = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                spyOn(module, 'removeListener');
+                scp.__cleanupModule(module);
+                expect(module.removeListener).toHaveBeenCalledWith(ModuleEvent.SOLO, scp.soloListener);
+            });
+
+            it('should call the modules on connect with the soundscapes gainNode', function() {
+                var module = scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
+                spyOn(module, 'disconnect');
+                scp.__cleanupModule(module);
+                expect(module.disconnect).toHaveBeenCalled();
+            });
+        });
+
+        describe('__onTimerComplete', function() {
+            it('should emit a COMPLETE event', function() {
+                spyOn(scp, 'emit');
+                scp.__onTimerComplete();
+                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.COMPLETE);
+            });
+
+            it('should call the stop method', function() {
+                spyOn(scp, 'stop');
+                scp.__onTimerComplete();
+                expect(scp.stop).toHaveBeenCalled();
+            });
+        });
+
+        describe('__onSoloModule', function() {
+            var modules;
+
             beforeEach(function() {
-                var mod1 = new SoundModule();
-                var mod2 = new SoundModule();
-                var mod3 = new SoundModule();
-                scp.addModule(mod1);
-                scp.addModule(mod2);
-                scp.addModule(mod3);
+                modules = addSoundModules(scp, options, 5);
             });
 
             it('should be defined', function() {
-                expect(scp.unsoloModule).toBeDefined(0);
+                expect(scp.__onSoloModule).toBeDefined();
             });
 
-            it('should emit a UNSOLO_MODULE event', function() {
-                spyOn(scp, 'emit');
-                var scpModule = scp.modules[0];
-                scp.soloModule(scpModule.id);
-                scp.unsoloModule(scpModule.id);
-                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.UNSOLO_MODULE, scpModule);
+            it('should disconnect all unsoloed modules', function() {
+                var unSoloedModule = modules[1];
+                spyOn(unSoloedModule, 'disconnect');
+                scp.__onSoloModule();
+                expect(unSoloedModule.disconnect).toHaveBeenCalled();
             });
 
-            it('should set the module entrys soloed value to false', function() {
-                var scpModule = scp.modules[0];
-                scp.soloModule(scpModule.id);
-                scp.unsoloModule(scpModule.id);
-                expect(scpModule.soloed).toBe(false);
+            it('should not disconnect soloed modules', function() {
+                var soloedModule = modules[1];
+                soloedModule.solo = true;
+                spyOn(soloedModule, 'disconnect');
+                scp.__onSoloModule();
+                expect(soloedModule.disconnect).not.toHaveBeenCalled();
             });
 
-            it('should call the soloed modules start method', function() {
-                var scpModule = scp.modules[0];
-                spyOn(scpModule.module, 'start');
-                scp.soloModule(scpModule.id);
-                scp.unsoloModule(scpModule.id)
-                expect(scpModule.module.start).toHaveBeenCalled();
+            it('should connect any soloed modules', function() {
+                var soloedModule = modules[1];
+                soloedModule.solo = true;
+                spyOn(soloedModule, 'connect');
+                scp.__onSoloModule();
+                expect(soloedModule.connect).toHaveBeenCalled();
             });
 
-            it('should return the unsoloed soundscape module', function() {
-                var scpModule = scp.modules[0];
-                scp.soloModule(scpModule.id);
-                var unsoloed = scp.soloModule(scpModule.id);
-                expect(unsoloed).toEqual(scpModule);
+            it('should not connect unsoloed modules', function() {
+                var unSoloedModule = modules[1];
+                spyOn(unSoloedModule, 'connect');
+                scp.__onSoloModule();
+                expect(unSoloedModule.connect).not.toHaveBeenCalled();
             });
         });
+
     });
 
     describe('Events', function() {
