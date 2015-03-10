@@ -29,9 +29,12 @@ module.exports = function (config) {
             { pattern: 'src/soundscape/**/*.js', included:false, served: true },
             // { pattern: 'test/specs/soundscape/modules/*.spec.js', included:false },
             // { pattern: 'test/specs/soundscape/services/*.spec.js', included:false },
-            // { pattern: 'test/specs/soundscape/soundscape.spec.js', included:false }
-            { pattern: 'test/specs/soundscape/modules/*.spec.js', included:false },
-            { pattern: 'test/specs/soundscape/property-controls/*.spec.js', included:false }
+            // { pattern: 'test/specs/soundscape/soundscape.spec.js', included:false },
+            // { pattern: 'test/specs/soundscape/modules/*.spec.js', included:false },
+            // { pattern: 'test/specs/soundscape/property-controls/**/*.spec.js', included:false }
+            // { pattern: 'test/specs/soundscape/module-factory.spec.js', included:false },
+            { pattern: 'test/specs/soundscape/services/soundscape-importer.spec.js', included:false },
+            { pattern: 'test/specs/soundscape/services/soundscape-exporter.spec.js', included:false }
         ],
 
         exclude: [

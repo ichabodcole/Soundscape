@@ -42,6 +42,7 @@ describe ('ColorNoiseModule', function() {
 
         describe ('gain', function () {
             it ('should return the gain value as number', function () {
+                sm.gain = 1;
                 expect(sm.gain).toBe(1);
             });
 
@@ -114,12 +115,6 @@ describe ('ColorNoiseModule', function() {
     describe ('methods', function () {
 
         describe ('start', function() {
-            it ('should call the volume controls on method', function() {
-                spyOn(sm.volume, 'on');
-                sm.start();
-                expect(sm.volume.on).toHaveBeenCalled();
-            });
-
             it('should call the generators start method', function() {
                 spyOn(sm.generator, 'start');
                 sm.start();
@@ -134,12 +129,6 @@ describe ('ColorNoiseModule', function() {
         });
 
         describe ('stop', function() {
-            it ('should call the volume controls off method', function() {
-                spyOn(sm.volume, 'removeListener');
-                sm.stop();
-                expect(sm.volume.removeListener).toHaveBeenCalled();
-            });
-
             it('should call the generators stop method', function() {
                 spyOn(sm.generator, 'stop');
                 sm.stop();
@@ -206,24 +195,6 @@ describe ('ColorNoiseModule', function() {
                 spyOn(sm,'emit');
                 sm.destroy();
                 expect(sm.emit).toHaveBeenCalledWith(ColorNoiseModuleEvent.DESTROY);
-            });
-        });
-
-        describe ('serialize', function() {
-            it ('should return an object describing the modules current state', function() {
-                var sm = new ColorNoiseModule();
-                var expectedState = {
-                    type: 'color-noise-module',
-                    muted: false,
-                    volume: {
-                        min: 0,
-                        max: 1,
-                        value: 0.5,
-                        controlType: OmniControl.BASE_CONTROL
-                    },
-                    noiseType: ColorNoiseModule.BROWN_NOISE
-                };
-                expect(sm.serialize()).toEqual(expectedState);
             });
         });
     });

@@ -9,51 +9,15 @@ export var GraphControlEvent = Object.assign({
 }, BaseControlEvent);
 
 export class GraphControl extends BaseControl {
-    constructor (options={}) {
-        super(options);
-
-        this.points = options.points || [];
-
-        if (this.model.points != null) {
-            this.sortPointsByTime();
-        }
-    }
-
-    addPoints (pointsObj) {
-        if (!Array.isArray(pointsObj)
-            && !(pointsObj instanceof Object)) {
-            return false;
-        }
-
-        if (Array.isArray(pointsObj)) {
-            this.points = this.points.concat(pointsObj);
-        } else if (pointsObj instanceof Object) {
-            this.points.push(pointsObj);
-            this.sortPointsByTime();
-        }
-
-        this.emit(GraphControlEvent.ADD_POINTS , this.points);
-        return this.points;
-    }
-
-    removePoint (pointIndex) {
-        if (typeof pointIndex === 'number'
-            && pointIndex > 0
-            && pointIndex < this.points.length - 1) {
-            this.points.splice(pointIndex, 1);
-            this.emit(GraphControlEvent.REMOVE_POINT, this.points);
-            return this.points;
-        }
-    }
-
-    sortPointsByTime () {
+    // Private Methods
+    __sortPointsByTime () {
         this.points.sort(function (a, b) {
             return a.t - b.t;
         });
         return this.points;
     }
 
-    findPointsByTime (t) {
+    __findTimeBoundryPoints (t) {
         // Points should already be sorted by t.
         var endIndex    = null,
             startIndex  = null,
@@ -85,9 +49,9 @@ export class GraphControl extends BaseControl {
         }
     }
 
-    valueAtTime (t) {
+    __calculateValueFromProgress (t) {
        // Get interpolation function based first points type
-        var points = this.findPointsByTime(t),
+        var points = this.__findTimeBoundryPoints(t),
             p1 = points[0],
             p2 = points[1];
 
@@ -96,9 +60,50 @@ export class GraphControl extends BaseControl {
         // local point time
         var lpt = (1 / (p2.t - p1.t)) * st;
 
-        this.value = Math.round(Interpolation.smoothStep(lpt, p1.v, p2.v) * 1000) / 1000;
+        return Math.round(Interpolation.smoothStep(lpt, p1.v, p2.v) * 1000) / 1000;
+    }
 
-        return this.value;
+    __onProgressChange(e) {
+        this.value = this.__calculateValueFromProgress(e.progress);
+    }
+
+    constructor (options={}) {
+        super(options);
+
+        this.points = options.points || [];
+        this.__sortPointsByTime();
+        this.__progressListener = this.__onProgressChange.bind(this);
+    }
+
+    addPoints (pointsObj) {
+        if (!Array.isArray(pointsObj)
+            && !(pointsObj instanceof Object)) {
+            return false;
+        }
+
+        if (Array.isArray(pointsObj)) {
+            this.points = this.points.concat(pointsObj);
+        } else if (pointsObj instanceof Object) {
+            this.points.push(pointsObj);
+            this.__sortPointsByTime();
+        }
+
+        this.emit(GraphControlEvent.ADD_POINTS , this.points);
+        return this.points;
+    }
+
+    removePoint (pointIndex) {
+        if (typeof pointIndex === 'number'
+            && pointIndex > 0
+            && pointIndex < this.points.length - 1) {
+            this.points.splice(pointIndex, 1);
+            this.emit(GraphControlEvent.REMOVE_POINT, this.points);
+            return this.points;
+        }
+    }
+
+    setValueFromProgress(progress) {
+        this.value = this.__calculateValueFromProgress(progress);
     }
 
     get points () {
@@ -107,7 +112,7 @@ export class GraphControl extends BaseControl {
 
     set points (pointsArray) {
         this.model.points = pointsArray;
-        this.sortPointsByTime();
+        this.__sortPointsByTime();
     }
 }
 

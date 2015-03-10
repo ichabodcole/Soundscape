@@ -8,9 +8,16 @@ export var FollowControlEvent = Object.assign({
 }, BaseControlEvent);
 
 export class FollowControl extends BaseControl {
+
+    __onTargetPercentChange(e) {
+        this.percent = e.percent;
+    }
+
     constructor (options={}) {
         super(options);
         this.state = FollowControl.STOPPED;
+
+        this.__targetListener = this.__onTargetPercentChange.bind(this);
     }
 
     validateTarget (controlTarget) {
@@ -25,13 +32,9 @@ export class FollowControl extends BaseControl {
         }
     }
 
-    onTargetChange(e) {
-        this.percent = e.percent;
-    }
-
     start () {
         if (this.target != null && this.state === FollowControl.STOPPED) {
-            this.target.on(FollowControlEvent.VALUE_CHANGE, this.onTargetChange.bind(this));
+            this.target.on(FollowControlEvent.VALUE_CHANGE, this.__targetListener);
             this.state = FollowControl.ACTIVE;
             this.emit(FollowControlEvent.START);
         }
@@ -39,10 +42,15 @@ export class FollowControl extends BaseControl {
 
     stop () {
         if (this.state === FollowControl.ACTIVE) {
-            this.target.removeListener(FollowControlEvent.VALUE_CHANGE, this.onTargetChange);
+            this.target.removeListener(FollowControlEvent.VALUE_CHANGE, this.__targetListener);
             this.state = FollowControl.STOPPED;
             this.emit(FollowControlEvent.STOP);
         }
+    }
+
+    destroy () {
+        this.stop();
+        super.destroy();
     }
 
     get target () {

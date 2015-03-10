@@ -73,18 +73,6 @@ describe('ModuleFactory', function() {
                     });
                 });
             });
-
-            describe('methods', function() {
-                describe('serialize', function() {
-                    it('should return an object with an id property', function() {
-                        expect(mod.serialize().id).toBe(options.id);
-                    });
-
-                    it('should return an objet with a soloed property', function() {
-                        expect(mod.serialize().soloed).toBe(false);
-                    });
-                });
-            });
         });
     });
 });

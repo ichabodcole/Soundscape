@@ -1,5 +1,4 @@
 import { Soundscape, SoundscapeEvent } from '../../../src/soundscape/soundscape';
-import { Timer, TimerEvent } from '../../../src/soundscape/services/timer';
 import { Channel } from '../../../src/soundscape/services/events';
 import SoundModule from '../../../src/soundscape/modules/sound-module';
 import { ModuleType, ModuleEvent } from '../../../src/soundscape/constants';
@@ -43,27 +42,6 @@ describe ('Soundscape', function () {
             });
         });
 
-        describe('timer', function() {
-            it('should be a Timer instance', function() {
-                expect(scp.timer instanceof Timer).toBe(true);
-            });
-
-            describe('completing the timer', function() {
-                it('should emit a COMPLETE event when the soundscape duration has elapsed', function() {
-                    jasmine.clock().mockDate(new Date());
-                    jasmine.clock().install();
-                    var scp = new Soundscape();
-                    scp.addModule(ModuleType.COLOR_NOISE_MODULE, options);
-                    scp.duration = 1500;
-                    spyOn(scp, 'emit');
-                    scp.start();
-                    jasmine.clock().tick(2000);
-                    expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.COMPLETE);
-                    jasmine.clock().uninstall();
-                });
-            });
-        });
-
         describe('modules', function() {
             it('should be defined', function() {
                 expect(scp.modules).toBeDefined();
@@ -71,27 +49,6 @@ describe ('Soundscape', function () {
 
             it('should be an Array instance', function() {
                 expect(scp.modules instanceof Array).toBe(true);
-            });
-        });
-
-        describe('duration', function() {
-            it('should be defined', function() {
-                expect(scp.duration).toBeDefined();
-            });
-
-            it('should set the duration property', function() {
-                scp.duration = 5000;
-                expect(scp.duration).toBe(5000);
-            });
-
-            it('should set the timers duration property', function() {
-                scp.duration = 5000;
-                expect(scp.timer.duration).toBe(5000);
-            });
-
-            it('should get the timers duration property', function() {
-                scp.duration = 5000;
-                expect(scp.duration).toEqual(scp.timer.duration);
             });
         });
 
@@ -214,12 +171,6 @@ describe ('Soundscape', function () {
                 expect(scp.start).toBeDefined();
             });
 
-            it('should call the timers start method', function () {
-                spyOn(scp.timer, 'start');
-                scp.start();
-                expect(scp.timer.start).toHaveBeenCalled();
-            });
-
             it('should set the state property value to ACTIVE', function() {
                 scp.start();
                 expect(scp.state).toBe(Soundscape.ACTIVE);
@@ -252,12 +203,6 @@ describe ('Soundscape', function () {
                 expect(scp.state).toBe(Soundscape.STOPPED);
             });
 
-            it('should call the timers stop method', function() {
-                spyOn(scp.timer, 'stop');
-                scp.stop();
-                expect(scp.timer.stop).toHaveBeenCalled();
-            });
-
             it('should emit a STOP event', function() {
                 spyOn(scp, 'emit');
                 scp.stop();
@@ -271,48 +216,10 @@ describe ('Soundscape', function () {
             });
         });
 
-        describe('pause', function() {
-            beforeEach(function() {
-                scp.start();
-            });
-
-            it('should be defined', function() {
-                expect(scp.pause).toBeDefined();
-            });
-
-            it('should set the state property to PAUSED', function() {
-                scp.pause()
-                expect(scp.state).toBe(Soundscape.PAUSED);
-            });
-
-            it('should call the timers pause method', function() {
-                spyOn(scp.timer, 'pause');
-                scp.pause();
-                expect(scp.timer.pause).toHaveBeenCalled();
-            });
-
-            it('should emit a PAUSE event', function() {
-                spyOn(scp, 'emit');
-                scp.pause();
-                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.PAUSE);
-            });
-
-            it('should call the stopModules methods', function() {
-                spyOn(scp, '__stopModules');
-                scp.pause();
-                expect(scp.__stopModules).toHaveBeenCalled();
-            })
-        });
 
         describe('destroy', function() {
             it('should be defined', function() {
                 expect(scp.destroy).toBeDefined();
-            });
-
-            it('should remove the Timer.COMPLETE listener', function() {
-                spyOn(scp.timer, 'removeListener');
-                scp.destroy();
-                expect(scp.timer.removeListener).toHaveBeenCalledWith(TimerEvent.COMPLETE, scp.timerListener);
             });
 
             it('should teardown the modules', function() {
@@ -386,20 +293,6 @@ describe ('Soundscape', function () {
                 spyOn(module, 'disconnect');
                 scp.__cleanupModule(module);
                 expect(module.disconnect).toHaveBeenCalled();
-            });
-        });
-
-        describe('__onTimerComplete', function() {
-            it('should emit a COMPLETE event', function() {
-                spyOn(scp, 'emit');
-                scp.__onTimerComplete();
-                expect(scp.emit).toHaveBeenCalledWith(SoundscapeEvent.COMPLETE);
-            });
-
-            it('should call the stop method', function() {
-                spyOn(scp, 'stop');
-                scp.__onTimerComplete();
-                expect(scp.stop).toHaveBeenCalled();
             });
         });
 

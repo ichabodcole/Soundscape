@@ -72,6 +72,19 @@ var utils = {
     */
     mins2Mils: function(mins) {
         return mins * 1000 * 60; // * 0.0667 (limit to 3 decimals?)
+    },
+
+    /**
+    * @description
+    * Clamps the input to the min or max arguments
+    *
+    * @param input number
+    * @param min number
+    * @param max number
+    * @returns number - amount of milliseconds
+    */
+    clamp: function(input, min, max) {
+        return Math.max(min, Math.min(input, max));
     }
 };
 

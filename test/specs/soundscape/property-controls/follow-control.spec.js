@@ -119,7 +119,7 @@ describe ('FollowControl', function () {
                 spyOn(bc, 'on');
                 fc.target = bc;
                 fc.start();
-                expect(fc.target.on).toHaveBeenCalledWith(FollowControlEvent.VALUE_CHANGE, jasmine.any(Function));
+                expect(fc.target.on).toHaveBeenCalledWith(FollowControlEvent.VALUE_CHANGE, fc.__targetListener);
             });
 
             it ('should not do anything if a target is has not been set when called', function () {
@@ -129,7 +129,7 @@ describe ('FollowControl', function () {
                 expect(fc.target.on).not.toHaveBeenCalled();
             });
 
-            it ('should call the events emit method with the START event', function () {
+            it ('should call the emit method with the START event', function () {
                 spyOn(fc, 'emit');
                 fc.target = bc;
                 fc.start();
@@ -147,7 +147,7 @@ describe ('FollowControl', function () {
                 fc.target = bc;
                 fc.start();
                 fc.stop();
-                expect(fc.target.removeListener).toHaveBeenCalledWith(FollowControlEvent.VALUE_CHANGE, jasmine.any(Function));
+                expect(fc.target.removeListener).toHaveBeenCalledWith(FollowControlEvent.VALUE_CHANGE, fc.__targetListener);
             });
 
             it ('should do nothing if a targetToken has not been set', function () {
@@ -163,6 +163,14 @@ describe ('FollowControl', function () {
                 fc.start();
                 fc.stop();
                 expect(fc.emit).toHaveBeenCalledWith(FollowControlEvent.STOP);
+            });
+        });
+
+        describe('destroy', function() {
+            it('should call the stop method', function() {
+                spyOn(fc, 'stop');
+                fc.destroy();
+                expect(fc.stop).toHaveBeenCalled();
             });
         });
 

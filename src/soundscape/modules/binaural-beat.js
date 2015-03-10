@@ -3,7 +3,7 @@ import { SoundModule, SoundModuleEvent } from './sound-module';
 import { OmniControl, OmniControlEvent } from '../property-controls/omni-control';
 
 var binauralBeatDefaults = {
-    type: 'binaural-beat-module',
+    type: 'module:binaural-beat',
     pitch: {
         min: 0,
         max: 1200,
@@ -30,13 +30,21 @@ export class BinauralBeatModule extends SoundModule {
     }
 
     constructor (options) {
-        this.pitchListener = null;
-        this.beatRateListener = null;
+        this.__pitchListener    = this.__onPitchChange.bind(this);
+        this.__beatRateListener = this.__onBeatRateChange.bind(this);
 
         super(options);
+        this.initGenerator();
+    }
+
+    initGenerator() {
         // Setup the sound generator
         this.generator = new BinauralBeat(this.audioCtx);
         this.generator.connect(this.gainNode);
+
+        this.generator.setPitch(this.model.pitch.value);
+        this.generator.setBeatRate(this.model.beatRate.value);
+        this.generator.setWaveType(this.model.waveType);
     }
 
     setDefaults() {
@@ -47,45 +55,29 @@ export class BinauralBeatModule extends SoundModule {
         super.setControls();
         // Set the sound generator specific properties
         this.pitch = new OmniControl(this.model.pitch);
+        this.pitch.on(OmniControlEvent.VALUE_CHANGE, this.__pitchListener);
+        this.controls.push(this.pitch);
+
         this.beatRate = new OmniControl(this.model.beatRate);
+        this.beatRate.on(OmniControlEvent.VALUE_CHANGE, this.__beatRateListener);
+        this.controls.push(this.beatRate);
     }
 
     // Public API
     start() {
         super.start();
-        this.pitchListener = this.__onPitchChange.bind(this);
-        this.beatRateListener = this.__onBeatRateChange.bind(this);
-
-        this.pitch.on(OmniControlEvent.VALUE_CHANGE, this.pitchListener);
-        this.beatRate.on(OmniControlEvent.VALUE_CHANGE, this.beatRateListener);
         this.generator.start();
     }
 
     stop() {
         super.stop();
-        this.pitch.removeListener(OmniControlEvent.VALUE_CHANGE, this.pitchListener);
-        this.beatRate.removeListener(OmniControlEvent.VALUE_CHANGE, this.beatRateListener);
         this.generator.stop();
     }
 
     destroy() {
+        this.pitch.removeListener(OmniControlEvent.VALUE_CHANGE, this.__pitchListener);
+        this.beatRate.removeListener(OmniControlEvent.VALUE_CHANGE, this.__beatRateListener);
         super.destroy();
-    }
-
-    /*** state ***/
-    serialize() {
-        var data = super.serialize();
-        data.pitch = {
-            min: this.pitch.min,
-            max: this.pitch.max,
-            value: this.pitch.value
-        };
-        data.beatRate = {
-            min: this.beatRate.min,
-            max: this.beatRate.max,
-            value: this.beatRate.value
-        };
-        return data;
     }
 
     /*************************************

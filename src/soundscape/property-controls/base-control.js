@@ -1,22 +1,22 @@
+import utils from '../services/utils';
 var EventEmitter = require('events').EventEmitter;
 
 export var BaseControlEvent = {
-    VALUE_CHANGE: 'value_change'
+    VALUE_CHANGE: 'value_change',
+    DESTROY: 'destroy'
 };
 
 export class BaseControl extends EventEmitter {
 
     // Private Methods
-    __getValueFromPercent (percent) {
+    __calculateValueFromPercent (percent) {
         var diff = this.max - this.min;
-        var num = (percent * diff) + this.min;
-        return num.toFixed(8)/1;
+        return (percent * diff) + this.min;
     }
 
-    __getPercentFromValue (value) {
+    __calculatePercentFromValue (value) {
         var diff = this.max - this.min;
-        var num = ((1000 / diff) * (value - this.min)) / 1000;
-        return num.toFixed(8)/1;
+        return ((1000 / diff) * (value - this.min)) / 1000;
     }
 
     __applyTransforms(input) {
@@ -28,25 +28,17 @@ export class BaseControl extends EventEmitter {
         return input;
     }
 
-    __clampToBounds(input, min, max) {
-        var output = input;
-
-        if (input < min) {
-            output = min;
-        } else if(input > max) {
-            output = max;
-        }
-        return output;
-    }
-
     __handleError (errorMessage) {
         throw new Error(this.controlName + ': ' + errorMessage);
     }
 
     // Constructor init code
     constructor (options={}) {
+        this.__lastValueInput   = null;
+        this.__lastPercentInput = null;
+
         this.controlName = options.controlName || 'Property Control';
-        this.transforms = options.transforms || [];
+        this.transforms  = options.transforms || [];
 
         // Set default model values.
         this.model = {};
@@ -79,6 +71,20 @@ export class BaseControl extends EventEmitter {
             this.__handleError('removeTransform argument must be a function');
         }
     }
+
+    destroy () {
+        this.emit(BaseControlEvent.DESTROY);
+    }
+
+    emitChangeEvent() {
+        this.emit(BaseControlEvent.VALUE_CHANGE, {
+            value: this.value,
+            percent: this.percent,
+            min:this.min,
+            max:this.max
+        });
+    }
+
     // Getters and Setters
     get useTransforms () {
         return this.model.useTransforms;
@@ -113,56 +119,52 @@ export class BaseControl extends EventEmitter {
     }
 
     get percent () {
-        var transformed = this.__applyTransforms(this.model.percent);
-        return this.__clampToBounds(transformed, 0, 1);
+        var percent = this.__calculatePercentFromValue(this.value);
+        //var transformed = this.__applyTransforms(percent);
+        return utils.clamp(percent, 0, 1).toFixed(8)/1;
     }
 
     set percent (percent) {
-        if (percent >= 0 && percent <= 1) {
-            this.model.percent = percent;
-            this.value = this.__getValueFromPercent(percent);
+        if (typeof percent === 'number') {
+            if (percent !== this.__lastPercentInput) {
+                if (percent >= 0 && percent <= 1) {
+                    this.__lastPercentInput = percent;
+                    // recalculate the value property based on the updated percent
+                    this.value = this.__calculateValueFromPercent(percent);
+                } else {
+                    this.__handleError(`percent property (${percent}) must be a value with in range 0...1`);
+                }
+            }
         } else {
-            this.__handleError(`percent property (${percent}) must be a value with in range 0...1`);
+            this.__handleError('percent must be of type number');
         }
     }
 
     get value () {
         var transformInput = this.model.value - this.min;
         var transformed = this.__applyTransforms(transformInput) + this.min;
-        return this.__clampToBounds(transformed, this.min, this.max);
+        return utils.clamp(transformed, this.min, this.max).toFixed(8)/1;
     }
 
     set value (value) {
         if (typeof value === 'number') {
-            if (value >= this.min || this.min == null) {
-                if(value <= this.max || this.max == null) {
-                    this.model.value = value;
-                    // Must access the model directly so that an
-                    // infinite update loop is not created.
-                    this.model.percent = this.__getPercentFromValue(value);
-
-                    var data = {
-                        percent: this.percent,
-                        value: this.value
-                    };
-
-                    this.emit(BaseControlEvent.VALUE_CHANGE, data);
+            if(value !== this.__lastValueInput) {
+                if (value >= this.min || this.min == null) {
+                    if(value <= this.max || this.max == null) {
+                        this.model.value = value;
+                        this.__lastValueInput = value;
+                        this.emitChangeEvent();
+                    } else {
+                        this.__handleError(`cannot set value property (${value}) higher than max property (${this.max})`);
+                    }
                 } else {
-                    this.__handleError(`cannot set value property (${value}) higher than max property (${this.max})`);
+                    this.__handleError(`cannot set value property (${value}) lower than min property (${this.min})`);
                 }
-            } else {
-                this.__handleError(`cannot set value property (${value}) lower than min property (${this.min})`);
             }
+        } else {
+            this.__handleError('value must be of type number');
         }
     }
-
-    // set propertyName (propertyName) {
-    //     this.model.propertyName = propertyName;
-    // }
-
-    // get propertyName () {
-    //     return this.model.propertyName;
-    // }
 }
 
 export default BaseControl;

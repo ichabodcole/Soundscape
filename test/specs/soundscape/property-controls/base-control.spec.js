@@ -32,31 +32,9 @@ describe ('BaseControl', function () {
                 new BaseControl({ min:100, max: 1000 });
             }).not.toThrow();
         });
-
-        xit ('should throw an error if no propertyName is defined in the model', function () {
-            expect(function () {
-                new BaseControl();
-            }).toThrow(new Error ('BaseControl: model object must have a propertyName attribute defined'));
-        });
     });
 
     describe ('properties', function () {
-
-        xdescribe ('propertName', function () {
-            it ('should be defined', function () {
-                expect(bc.propertyName).toBeDefined();
-            });
-
-            it ('should get the models propertyName value', function () {
-                expect(bc.propertyName).toBe('baseProperty');
-            });
-
-            it ('should set the models propertyName value', function() {
-                bc.propertyName = 'chunky';
-                expect(bc.model.propertyName).toBe('chunky');
-            });
-        });
-
         describe ('min', function() {
             describe('as a setter', function() {
                 it ('should set the models min value', function() {
@@ -112,24 +90,42 @@ describe ('BaseControl', function () {
                     }).toThrow(new Error('Property Control: percent property (50) must be a value with in range 0...1'));
                 });
 
-                it ('should set the value property to a corresponding value', function() {
-                    bc.max = 200;
-                    bc.min = 100;
-                    bc.percent = 0.75;
-                    expect(bc.value).toBe(175);
+                it ('should calculate a new value based on the percent', function() {
+                    bc.setRange(0, 100);
+                    bc.percent = 0.65;
+                    expect(bc.value).toEqual(65);
                 });
 
-                it ('should emit a VALUE_CHANGE message and a data object containing the current percent and value properties', function () {
+                it ('should emit a VALUE_CHANGE event', function() {
                     spyOn(bc, 'emit');
-                    bc.max = 200;
-                    bc.min = 100;
-                    bc.percent = 0.75;
-                    var data = {
-                        percent: 0.75,
-                        value: 175
-                    };
+                    bc.percent = 0.65;
+                    expect(bc.emit).toHaveBeenCalledWith(BaseControlEvent.VALUE_CHANGE, jasmine.any(Object));
+                });
 
-                    expect(bc.emit).toHaveBeenCalledWith(BaseControlEvent.VALUE_CHANGE, data);
+                it ('should not emit a VALUE_CHANGE event if percent has not changed', function() {
+                    spyOn(bc, 'emit');
+                    bc.percent = 0.65;
+                    bc.percent = 0.65;
+                    bc.percent = 0.65;
+                    expect(bc.emit.calls.count()).toEqual(1);
+                });
+
+                it('should fix the returned value to a maximum of 8 decimals', function() {
+                    bc.percent = 0.123456789;
+                    var decimalLength = bc.percent.toString().split('.')[1].length;
+                    expect(decimalLength).toEqual(8);
+                });
+
+                it ('should only set the model percent if the passed percent is a number', function () {
+                    expect(function() {
+                        bc.percent = "A String";
+                    }).toThrow(new Error('Property Control: percent must be of type number'));
+                });
+
+                it('should update the value property', function() {
+                    bc.setRange(0, 100);
+                    bc.percent = 0.5;
+                    expect(bc.value).toEqual(50);
                 });
             });
 
@@ -151,24 +147,13 @@ describe ('BaseControl', function () {
                     expect(bc.percent).toBe(0.25);
                 });
 
-                it ('should not apply transforms to the models percent property', function() {
-                    var myScaleTransform = function(input) {
-                        return input * 0.5;
-                    };
-
-                    bc.percent = 1;
-                    bc.addTransform(myScaleTransform);
-                    bc.addTransform(myScaleTransform);
-
-                    expect(bc.model.percent).toBe(1);
-                });
-
                 it ('should not return values less than the 0', function() {
                     var myLowerTransform = function(input) {
                         return input - 100;
                     };
 
                     bc.setRange(100, 200);
+
                     bc.value = 150;
                     bc.addTransform(myLowerTransform);
 
@@ -190,7 +175,6 @@ describe ('BaseControl', function () {
         });
 
         describe ('value', function () {
-
             describe ('as a setter', function() {
                 it ('should set the model value', function () {
                     bc.value = 0.75;
@@ -211,31 +195,36 @@ describe ('BaseControl', function () {
                     }).toThrow(new Error('Property Control: cannot set value property (150) higher than max property (100)'));
                 });
 
-                it ('should set the percent property to a corresponding value', function() {
-                    bc.max = 200;
-                    bc.min = 100;
-
-                    bc.value = 125;
-
-                    expect(bc.percent).toBe(0.25);
+                it ('should emit a VALUE_CHANGE event', function() {
+                    spyOn(bc, 'emit');
+                    bc.value = 0.65;
+                    expect(bc.emit).toHaveBeenCalledWith(BaseControlEvent.VALUE_CHANGE, jasmine.any(Object));
                 });
 
-                it ('should emit a VALUE_CHANGE message and a data object containing the current percent and value properties', function () {
-                    spyOn(bc, 'emit')
-                    bc.max = 200;
-                    bc.min = 100;
-                    bc.value = 175;
-                    var data = {
-                        percent: 0.75,
-                        value: 175
-                    };
+                it ('should not emit a VALUE_CHANGE event if value has not changed', function() {
+                    spyOn(bc, 'emit');
+                    bc.value = 0.65;
+                    bc.value = 0.65;
+                    bc.value = 0.65;
+                    expect(bc.emit.calls.count()).toEqual(1);
+                });
 
-                    expect(bc.emit).toHaveBeenCalledWith(BaseControlEvent.VALUE_CHANGE, data);
+                it('should fix the returned value to a maximum of 8 decimals', function() {
+                    bc.value = 0.123456789;
+                    var decimalLength = bc.value.toString().split('.')[1].length;
+                    expect(decimalLength).toEqual(8);
                 });
 
                 it ('should only set the model value if the passed value is a number', function () {
-                    bc.value = "A String";
-                    expect(bc.value).toBe(0.5);
+                    expect(function() {
+                        bc.value = "A String";
+                    }).toThrow(new Error('Property Control: value must be of type number'));
+                });
+
+                it('should upate the percent property', function() {
+                    bc.setRange(0, 200);
+                    bc.value = 100;
+                    expect(bc.percent).toEqual(0.5);
                 });
             });
 
@@ -298,7 +287,7 @@ describe ('BaseControl', function () {
             });
         });
 
-        describe ('useTransforms', function() {
+        xdescribe ('useTransforms', function() {
             it ('should default to true', function() {
                 expect(bc.useTransforms).toBe(true);
             });
@@ -341,78 +330,162 @@ describe ('BaseControl', function () {
     });
 
     describe ('methods', function () {
-
-        describe ('on', function () {
-            it('should be defined', function() {
-                expect(bc.on).toBeDefined();
-            });
-        });
-
-        describe ('removeListener', function () {
-            it('should be defined', function() {
-                expect(bc.removeListener).toBeDefined();
-            });
-        });
-
-        describe ('setRange', function() {
-            it ('should be defined', function() {
-                expect(bc.setRange).toBeDefined();
+        describe('public methods', function() {
+            describe ('on', function () {
+                it('should be defined', function() {
+                    expect(bc.on).toBeDefined();
+                });
             });
 
-            it ('should set the min and max properties', function() {
-                bc.setRange(100, 200);
-                expect(bc.min).toBe(100);
-                expect(bc.max).toBe(200);
+            describe ('removeListener', function () {
+                it('should be defined', function() {
+                    expect(bc.removeListener).toBeDefined();
+                });
             });
 
-            it ('should throw an error if invalid arguments are supplied', function() {
-                expect(function() {
-                    bc.setRange(100, 0);
-                }).toThrow();
-            })
-        });
+            describe ('setRange', function() {
+                it ('should be defined', function() {
+                    expect(bc.setRange).toBeDefined();
+                });
 
-        describe ('addTransform', function() {
-            it ('should be defined', function() {
-                expect(bc.addTransform).toBeDefined();
+                it ('should set the min and max properties', function() {
+                    bc.setRange(100, 200);
+                    expect(bc.min).toBe(100);
+                    expect(bc.max).toBe(200);
+                });
+
+                it ('should throw an error if invalid arguments are supplied', function() {
+                    expect(function() {
+                        bc.setRange(100, 0);
+                    }).toThrow();
+                })
             });
 
-            it ('should add the transform to the transforms array', function() {
-                bc.addTransform(myTransform);
-                expect(bc.transforms.length).toBe(1);
-            });
+            describe ('addTransform', function() {
+                it ('should be defined', function() {
+                    expect(bc.addTransform).toBeDefined();
+                });
 
-            it ('should throw an error if the transform argument is not a function', function() {
-                var myTransform = 0;
-                expect(function() {
+                it ('should add the transform to the transforms array', function() {
                     bc.addTransform(myTransform);
-                }).toThrow(new Error('Property Control: addTransform argument must be a function'));
+                    expect(bc.transforms.length).toBe(1);
+                });
+
+                it ('should throw an error if the transform argument is not a function', function() {
+                    var myTransform = 0;
+                    expect(function() {
+                        bc.addTransform(myTransform);
+                    }).toThrow(new Error('Property Control: addTransform argument must be a function'));
+                });
+            });
+
+            describe ('removeTransform', function() {
+                it ('should be defined', function() {
+                    expect(bc.removeTransform).toBeDefined();
+                });
+
+                it ('should remove all occurences of the transform from the transforms array', function() {
+                    var myTransformTwo = jasmine.createSpy('myTransform');
+
+                    bc.addTransform(myTransform);
+                    bc.addTransform(myTransform);
+                    bc.addTransform(myTransformTwo);
+
+                    expect(bc.transforms.length).toBe(3);
+
+                    bc.removeTransform(myTransform);
+                    expect(bc.transforms.length).toBe(1);
+                });
+
+                it ('should throw an error if the transform argument is not a function', function() {
+                    var myTransform = 0;
+                    expect(function() {
+                        bc.removeTransform(myTransform);
+                    }).toThrow(new Error('Property Control: removeTransform argument must be a function'));
+                });
+            });
+
+            describe('emitChangeEvent', function() {
+                it ('should emit and VALUE_CHANGE event', function() {
+                    spyOn(bc, 'emit');
+
+                    var returnObj = {
+                        value: bc.value,
+                        percent: bc.percent,
+                        min: bc.min,
+                        max: bc.max
+                    };
+
+                    bc.emitChangeEvent();
+                    expect(bc.emit).toHaveBeenCalledWith(BaseControlEvent.VALUE_CHANGE, returnObj);
+                });
+            });
+
+            describe ('destroy', function() {
+                it('should be defined', function() {
+                    expect(bc.destroy).toBeDefined();
+                });
+
+                it('should emit an DESTROY event', function() {
+                    spyOn(bc, 'emit');
+                    bc.destroy();
+                    expect(bc.emit).toHaveBeenCalledWith(BaseControlEvent.DESTROY);
+                });
             });
         });
 
-        describe ('removeTransform', function() {
-            it ('should be defined', function() {
-                expect(bc.removeTransform).toBeDefined();
+        describe('private methods', function() {
+            describe('__calculateValueFromPercent', function() {
+                it('should be defined', function() {
+                    expect(bc.__calculatePercentFromValue).toBeDefined();
+                });
+
+                it('should return a value between the min an max properties based on the percent argument', function() {
+                    bc.setRange(0, 200);
+                    var returned = bc.__calculateValueFromPercent(0.5);
+                    expect(returned).toEqual(100);
+                });
             });
 
-            it ('should remove all occurences of the transform from the transforms array', function() {
-                var myTransformTwo = jasmine.createSpy('myTransform');
+            describe('__calculatePercentFromValue', function() {
+                it('should be defined', function() {
+                    expect(bc.__calculatePercentFromValue).toBeDefined();
+                });
 
-                bc.addTransform(myTransform);
-                bc.addTransform(myTransform);
-                bc.addTransform(myTransformTwo);
-
-                expect(bc.transforms.length).toBe(3);
-
-                bc.removeTransform(myTransform);
-                expect(bc.transforms.length).toBe(1);
+                it('should return a percent between 0 and 1 based on the value argument', function() {
+                    bc.setRange(0, 200);
+                    var returned = bc.__calculatePercentFromValue(100);
+                    expect(returned).toEqual(0.5);
+                });
             });
 
-            it ('should throw an error if the transform argument is not a function', function() {
-                var myTransform = 0;
-                expect(function() {
-                    bc.removeTransform(myTransform);
-                }).toThrow(new Error('Property Control: removeTransform argument must be a function'));
+            describe('__applyTransforms', function() {
+                it('should be defined', function() {
+                    expect(bc.__applyTransforms).toBeDefined();
+                });
+
+                it('should apply all transforms to the input argument', function() {
+                    var transform = function (input) {
+                        return input * 2;
+                    };
+
+                    bc.addTransform(transform);
+
+                    var transformed = bc.__applyTransforms(1);
+                    expect(transformed).toEqual(2);
+                });
+
+                it('should not apply transforms if useTransforms is false', function() {
+                    var transform = function (input) {
+                        return input * 2;
+                    };
+
+                    bc.useTransforms = false;
+                    bc.addTransform(transform);
+
+                    var transformed = bc.__applyTransforms(1);
+                    expect(transformed).toEqual(1);
+                });
             });
         });
     });

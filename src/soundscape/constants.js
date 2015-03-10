@@ -1,4 +1,4 @@
-import { OmniControl } from './property-controls/omni-control';
+import { OmniControl, OmniControlEvent } from './property-controls/omni-control';
 import { SoundModuleEvent } from './modules/sound-module';
 import { ColorNoiseModule } from './modules/color-noise';
 
@@ -10,6 +10,8 @@ export var ModuleType = {
 export var ModuleEvent = Object.assign({
     SOLO: 'soundmodule:solo'
 }, SoundModuleEvent);
+
+export var ControlEvent = Object.assign({}, OmniControlEvent);
 
 export var ControlType = {
     BASE_CONTROL: OmniControl.BASE_CONTROL,
@@ -26,3 +28,9 @@ export var NoiseType = {
 export var WaveType = {
 
 };
+
+export default {
+    ModuleType: ModuleType,
+    NoiseType: NoiseType,
+    ControlType: ControlType
+}

@@ -32,8 +32,9 @@ export class SoundModule extends EventEmitter {
     }
 
     constructor (options={}) {
+        this.__volumeListener = this.__onVolumeChange.bind(this);
         this.state = SoundModule.STOPPED;
-        this.volumeListener = null;
+        this.controls = [];
 
         this.audioCtx   = options.audioCtx || AudioProvider.getContext();
         this.gainNode   = this.audioCtx.createGain();
@@ -59,23 +60,22 @@ export class SoundModule extends EventEmitter {
     setControls () {
         // Create a volume property control
         this.volume = new OmniControl(this.model.volume);
+        this.volume.on(OmniControlEvent.VALUE_CHANGE, this.__volumeListener);
+        this.controls.push(this.volume);
+
+        this.volume.value = this.volume.value;
+        this.mute = this.mute;
     }
 
     // Public API
     start () {
-        this.volumeListener = this.__onVolumeChange.bind(this);
-        this.volume.on(OmniControlEvent.VALUE_CHANGE, this.volumeListener);
         this.state = SoundModule.ACTIVE;
         this.emit(SoundModuleEvent.START);
     }
 
     stop () {
-        if(this.volumeListener != null) {
-            this.volume.removeListener(OmniControl.VALUE_CHANGE, this.volumeListener);
-            this.volumeListener = null;
-            this.state = SoundModule.STOPPED;
-            this.emit(SoundModuleEvent.STOP);
-        }
+        this.state = SoundModule.STOPPED;
+        this.emit(SoundModuleEvent.STOP);
     }
 
     connect (gainNode) {
@@ -89,23 +89,11 @@ export class SoundModule extends EventEmitter {
     }
 
     destroy () {
+        this.volume.removeListener(OmniControl.VALUE_CHANGE, this.__volumeListener);
+
         this.stop();
         this.disconnect();
         this.emit(SoundModuleEvent.DESTROY);
-    }
-
-    serialize () {
-        var data = {
-            type: this.type,
-            muted: this.mute,
-            volume: {
-                min: this.volume.min,
-                max: this.volume.max,
-                value: this.volume.value,
-                controlType: this.volume.controlType
-            }
-        };
-        return data;
     }
 
     /*************************************

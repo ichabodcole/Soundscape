@@ -3,7 +3,7 @@ import { SoundModule, SoundModuleEvent } from './sound-module';
 import OmniControl from '../property-controls/omni-control';
 
 var colorNoiseDefaults = {
-    type: 'color-noise-module',
+    type: 'module:color-noise',
     noiseType: 'brown'
 };
 
@@ -12,6 +12,10 @@ export var ColorNoiseModuleEvent = Object.assign({}, SoundModuleEvent);
 export class ColorNoiseModule extends SoundModule {
     constructor (options) {
         super(options);
+        this.initGenerator();
+    }
+
+    initGenerator() {
         // Setup the sound generator
         this.generator = new NoiseGen(this.audioCtx);
         this.generator.connect(this.gainNode);
@@ -37,12 +41,6 @@ export class ColorNoiseModule extends SoundModule {
     destroy() {
         super.destroy();
         this.generator.remove();
-    }
-
-    serialize() {
-        var data = super.serialize();
-        data.noiseType = this.noiseType;
-        return data;
     }
 
     /*************************************

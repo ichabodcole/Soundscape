@@ -1,4 +1,5 @@
 import { SoundModule, SoundModuleEvent } from '../../../../src/soundscape/modules/sound-module';
+import { ControlType } from '../../../../src/soundscape/constants';
 import OmniControl from '../../../../src/soundscape/property-controls/omni-control';
 
 describe ('SoundModule', function () {
@@ -58,6 +59,7 @@ describe ('SoundModule', function () {
 
         describe ('gain', function () {
             it ('should return the gain value as number', function () {
+                sm.gain = 1;
                 expect(sm.gain).toBe(1);
             });
 
@@ -114,12 +116,6 @@ describe ('SoundModule', function () {
     describe ('methods', function () {
 
         describe ('start', function() {
-            it ('should call the volume controls on method', function() {
-                spyOn(sm.volume, 'on');
-                sm.start();
-                expect(sm.volume.on).toHaveBeenCalled();
-            });
-
             it('should emit a START event', function() {
                 spyOn(sm,'emit');
                 sm.start();
@@ -134,12 +130,6 @@ describe ('SoundModule', function () {
         });
 
         describe ('stop', function() {
-            it ('should call the volume controls off method', function() {
-                spyOn(sm.volume, 'removeListener');
-                sm.stop();
-                expect(sm.volume.removeListener).toHaveBeenCalled();
-            });
-
             it('should emit a STOP event', function() {
                 spyOn(sm,'emit');
                 sm.stop();
@@ -202,23 +192,6 @@ describe ('SoundModule', function () {
                 spyOn(sm,'emit');
                 sm.destroy();
                 expect(sm.emit).toHaveBeenCalledWith(SoundModuleEvent.DESTROY);
-            });
-        });
-
-        describe ('serialize', function() {
-            it ('should return an object describing the modules current state', function() {
-                var sm = new SoundModule(options);
-                var expectedState = {
-                    type: 'sound-module',
-                    muted: false,
-                    volume: {
-                        min: 0,
-                        max: 1,
-                        value: 0.5,
-                        controlType: OmniControl.BASE_CONTROL
-                    }
-                };
-                expect(sm.serialize()).toEqual(expectedState);
             });
         });
     });

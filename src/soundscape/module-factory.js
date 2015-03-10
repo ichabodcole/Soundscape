@@ -7,7 +7,7 @@ import BinauralBeatModule from './modules/binaural-beat';
 import ColorNoiseModule from './modules/color-noise';
 
 var __modules = {};
-__modules[ModuleType.COLOR_NOISE_MODULE] = ColorNoiseModule;
+__modules[ModuleType.COLOR_NOISE_MODULE]   = ColorNoiseModule;
 __modules[ModuleType.BINAURAL_BEAT_MODULE] = BinauralBeatModule;
 
 export var ModuleFactory = {
@@ -41,7 +41,7 @@ export var ModuleFactory = {
             module.id = options.id || utils.uuid();
             module.solo = options.soloed || false;
 
-            decorateModule(module);
+            //decorateModule(module);
             return module;
         } else {
             throw(new Error(`ModuleFactory.create: unknown module type (${type})`));
