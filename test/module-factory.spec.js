@@ -1,13 +1,14 @@
-import ModuleFactory from '../../../src/soundscape/module-factory';
-import { ModuleType, ModuleEvent } from '../../../src/soundscape/constants';
-import SoundModule from '../../../src/soundscape/modules/sound-module';
+import ModuleFactory from '../lib/module-factory';
+import { SoundscapeEvents } from '../lib/index';
+import { ModuleTypes, ColorNoiseModule } from 'sound-modules';
 
 describe('ModuleFactory', function() {
-    var mod, options;
+    var mod, options,
+        ctx = new AudioContext();
 
     beforeEach(function() {
         options = { id: 'someValidId' };
-        mod = ModuleFactory.create(ModuleType.COLOR_NOISE_MODULE, options);
+        mod = ModuleFactory.create(ModuleTypes.COLOR_NOISE_MODULE, ctx, options);
     });
 
     describe('create',function() {
@@ -16,8 +17,8 @@ describe('ModuleFactory', function() {
         });
 
         it('should return a sound module based on the type argument', function() {
-            var ColorNoiseMod = ModuleFactory.create(ModuleType.COLOR_NOISE_MODULE);
-            expect(ColorNoiseMod instanceof SoundModule).toBe(true);
+            var ColorNoiseMod = ModuleFactory.create(ModuleTypes.COLOR_NOISE_MODULE, ctx);
+            expect(ColorNoiseMod instanceof ColorNoiseModule).toBe(true);
         });
 
         it('should throw an error when given an invalid module type', function() {
@@ -28,21 +29,6 @@ describe('ModuleFactory', function() {
 
         describe('decorating the SoundModule', function() {
             describe('properties', function() {
-                describe('id', function() {
-                    it('should be defined', function() {
-                        expect(mod.id).toBeDefined();
-                    });
-
-                    it('should defalt to a uuid string 36 characters long', function() {
-                        var mod = ModuleFactory.create(ModuleType.COLOR_NOISE_MODULE);
-                        expect(mod.id.length).toBe(36);
-                    });
-
-                    it('should use the options arguments id property if present', function() {
-                        expect(mod.id).toBe(options.id);
-                    });
-                });
-
                 describe('solo', function() {
                     it('should be defined', function() {
                         expect(mod.solo).toBeDefined();
@@ -64,11 +50,11 @@ describe('ModuleFactory', function() {
                             id: options.id,
                             state: true
                         };
-                        expect(mod.emit).toHaveBeenCalledWith(ModuleEvent.SOLO, expectedData);
+                        expect(mod.emit).toHaveBeenCalledWith(SoundscapeEvents.SOLO, expectedData);
                     });
 
                     it('should use the options arguments soloed property if present', function() {
-                        var mod = ModuleFactory.create(ModuleType.COLOR_NOISE_MODULE, { soloed: true });
+                        var mod = ModuleFactory.create(ModuleTypes.COLOR_NOISE_MODULE, ctx, { solo: true });
                         expect(mod.solo).toBe(true);
                     });
                 });
