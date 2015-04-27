@@ -1,8 +1,6 @@
-BrainbeatsEngineJS
+Soundscape
 ==========
 
 ### Installation
-
-### Basic Usage
-
+npm install ichabodcole/Soundscape
 
