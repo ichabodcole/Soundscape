@@ -1,24 +1,51 @@
 'use strict';
 
-var gulp     = require('gulp'),
-    sequence = require('run-sequence'),
-    env      = process.env.NODE_ENV || 'development';
+var env = process.env.NODE_ENV || 'development';
+var path = require('path');
 
-require('require-dir')('./tasks');
+var gulp        = require('gulp'),
+    browserify  = require('browserify'),
+    babelify    = require('babelify'),
+    jsStylish   = require('jshint-stylish'),
+    karma       = require('karma').server;
 
+var $ = require('gulp-load-plugins')();
 
-// var glp_concat = require('gulp-concat'),
-// glp_uglify = require('gulp-uglify'),
-// glp_changed = require('gulp-changed'),
-// glp_sourcemaps = require('gulp-sourcemaps'),
+gulp.task('tdd', ['jshint'], tdd);
+gulp.task('test', ['jshint'], test);
+gulp.task('jshint', jshint);
 
-
-/*************************************
-  *      Start the reload task
-**************************************/
-
-gulp.task('default', ['clean'], start);
-
-function start (done) {
-    gulp.start('reload');
+/* Test tasks */
+function tdd (done) {
+    karma.start({
+        configFile: path.join(__dirname, 'karma.conf.js'),
+        singleRun: false,
+        autoWatch: true
+    }, done);
 }
+
+function test (done) {
+    karma.start({
+        configFile: path.join(__dirname, 'karma.conf.js'),
+        singleRun: true,
+    });
+    done();
+}
+
+/* JavaScript Tasks */
+function jshint() {
+    var src = 'lib/**/*.js';
+    return gulp.src([src])
+        .pipe($.jshint())
+        .on('error', handleError)
+        .pipe($.jshint.reporter(jsStylish));
+}
+
+function handleError(err) {
+    console.error(err.toString());
+    //console.error('BURP');
+    process.stdout.write('\x07');
+    this.emit('end');
+}
+
+gulp.watch('lib/**/*.js', ['jshint']);
