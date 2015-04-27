@@ -20,8 +20,8 @@ config.files = {
             dest: explsDst + '/index.html'
         },
         js: {
-            src: explsSrc + '/js/**/*.js',
-            dest: explsDst + '/js'
+            src: explsSrc + '/**/*.js',
+            dest: explsDst
         },
         sass: {
             src: explsSrc + '/**/*.scss',
