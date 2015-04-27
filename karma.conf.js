@@ -26,9 +26,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
         'lib/**/*.js',
-        // 'test/**/*.spec.js'
-        'test/soundscape.spec.js'
-
+        'test/**/*.spec.js'
     ],
 
 
@@ -41,8 +39,7 @@ module.exports = function(config) {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
         'lib/**/*.js': ['browserify'],
-        // 'test/**/*.spec.js': ['browserify']
-        'test/soundscape.spec.js': ['browserify']
+        'test/**/*.spec.js': ['browserify']
     },
 
 
